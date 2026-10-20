@@ -7,3 +7,5 @@ dist/
 
 site/gallery.js
 site/assets/
+site/media/
+showcase/**/*.building.mp4

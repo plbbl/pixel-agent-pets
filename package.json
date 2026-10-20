@@ -33,6 +33,7 @@
     "setup": "node scripts/cli.mjs install",
     "doctor": "node scripts/cli.mjs doctor",
     "preview": "node scripts/preview.mjs",
+    "preview:site": "node scripts/serve-site.mjs",
     "test": "node --test tests/*.test.mjs",
     "check": "tsc --noEmit",
     "build:site": "node scripts/build-site.mjs",

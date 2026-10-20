@@ -1,0 +1,504 @@
+{
+  "version": 1,
+  "background": "#f0ede4",
+  "characters": {
+    "claude": {
+      "idle": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "affe663390023702a3f3ed518372ad8caab37070fbc90b7dfc01f75ad56cc173",
+        "sources": {
+          "360": "media/claude/idle-360.mp4",
+          "720": "media/claude/idle-720.mp4"
+        }
+      },
+      "special": {
+        "duration": 9.75,
+        "fps": 60.0,
+        "width": 1152,
+        "height": 720,
+        "frames": 585,
+        "sourceSha256": "c1f2964f5a979f25755acdea572143ed200bbd2915ec35cdbe1f5191c41d9a5b",
+        "sources": {
+          "360": "media/claude/special-360.mp4",
+          "720": "media/claude/special-720.mp4"
+        }
+      },
+      "typing": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "7c293242ad7e3f3ee6514f387df186fa0850c9ecbb0f979779d08ba18af55b79",
+        "sources": {
+          "360": "media/claude/typing-360.mp4",
+          "720": "media/claude/typing-720.mp4"
+        }
+      },
+      "reading": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "7c293d668eef2d1464d94f6270f7ed4d5ba03e0531b45517dfb125520d0b3f70",
+        "sources": {
+          "360": "media/claude/reading-360.mp4",
+          "720": "media/claude/reading-720.mp4"
+        }
+      },
+      "happy": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "a0997ee918ee6c97787deec9b1ab0a219cc60bd01cc64cf965c37804ac48f011",
+        "sources": {
+          "360": "media/claude/happy-360.mp4",
+          "720": "media/claude/happy-720.mp4"
+        }
+      },
+      "sending": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "8872ff62c4a39a2743c046323987574db3d61dc9581706b35f9b219f068286e7",
+        "sources": {
+          "360": "media/claude/sending-360.mp4",
+          "720": "media/claude/sending-720.mp4"
+        }
+      },
+      "pointing": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "d9bfdc9122e4f1b71b9123b3191c1126ca9807600de5d47bff0872df70e4381f",
+        "sources": {
+          "360": "media/claude/pointing-360.mp4",
+          "720": "media/claude/pointing-720.mp4"
+        }
+      },
+      "error": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "f20684cc6c41262c6f8a60ba45ae2dc4ef9ba2409b5403722d463d8c485f55d9",
+        "sources": {
+          "360": "media/claude/error-360.mp4",
+          "720": "media/claude/error-720.mp4"
+        }
+      },
+      "stopped": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "9821242c80e98ede9a44f0e329736f65470b19258ee0afd86b8436a851610670",
+        "sources": {
+          "360": "media/claude/stopped-360.mp4",
+          "720": "media/claude/stopped-720.mp4"
+        }
+      },
+      "dance": {
+        "duration": 8.0,
+        "fps": 24.0,
+        "width": 792,
+        "height": 720,
+        "frames": 192,
+        "sourceSha256": "2dfc59ae583f340e469be100b7920c74462decc75f17e6b720ca4f5d97748888",
+        "sources": {
+          "360": "media/claude/dance-360.mp4",
+          "720": "media/claude/dance-720.mp4"
+        }
+      },
+      "thinking": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "ca421571c115c0e5931484cdaa52e0c283b4d303b4f5c74c916c6ce408c6b156",
+        "sources": {
+          "360": "media/claude/thinking-360.mp4",
+          "720": "media/claude/thinking-720.mp4"
+        }
+      },
+      "confused": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "1f9d4ed72358d08d8919714eb5ef28216e71c0c5f3c8e34d348ded0d088c5ad7",
+        "sources": {
+          "360": "media/claude/confused-360.mp4",
+          "720": "media/claude/confused-720.mp4"
+        }
+      }
+    },
+    "deepseek": {
+      "idle": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "20bf01d1a302d58ab773be34b9bade77ca03f16cabfc705d1cc95756706da872",
+        "sources": {
+          "360": "media/deepseek/idle-360.mp4",
+          "720": "media/deepseek/idle-720.mp4"
+        }
+      },
+      "thinking": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "1e7a25bc1c9790eaa28dcb1504ca90471483ef9e785e0b098750b7cb9fd84f7a",
+        "sources": {
+          "360": "media/deepseek/thinking-360.mp4",
+          "720": "media/deepseek/thinking-720.mp4"
+        }
+      },
+      "typing": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "ca2576e4f3ec3896f0d187d93df63f45c7cb1e9646f5214bf6cc62fd3950f6c5",
+        "sources": {
+          "360": "media/deepseek/typing-360.mp4",
+          "720": "media/deepseek/typing-720.mp4"
+        }
+      },
+      "fast": {
+        "duration": 2.5806451612903225,
+        "fps": 37.2,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "ca2576e4f3ec3896f0d187d93df63f45c7cb1e9646f5214bf6cc62fd3950f6c5",
+        "sources": {
+          "360": "media/deepseek/fast-360.mp4",
+          "720": "media/deepseek/fast-720.mp4"
+        }
+      },
+      "happy": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "79fb8e81e9b1fc6795fa9f3927c3cf4c99a36e6eea4d8d629ff79834015d09ab",
+        "sources": {
+          "360": "media/deepseek/happy-360.mp4",
+          "720": "media/deepseek/happy-720.mp4"
+        }
+      },
+      "error": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "b81a0f5eb616dc55a1b59d05ac24fdfd622450867862b7da1e23e2bb0afdb213",
+        "sources": {
+          "360": "media/deepseek/error-360.mp4",
+          "720": "media/deepseek/error-720.mp4"
+        }
+      },
+      "hungry": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "4c7ddf181ae5abf214c070661b4431ab4d9122a2ba2a6c2b1aeeb4d8066a62c4",
+        "sources": {
+          "360": "media/deepseek/hungry-360.mp4",
+          "720": "media/deepseek/hungry-720.mp4"
+        }
+      },
+      "rice": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "497bc55dc519dc6cc3436e38029a05600828367288f2d7e8456f8002f31fd422",
+        "sources": {
+          "360": "media/deepseek/rice-360.mp4",
+          "720": "media/deepseek/rice-720.mp4"
+        }
+      },
+      "riceHappy": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 1152,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "2b0c8cd9cb191391ea221fac061103a08928abb328e73fa6d96439c984253d27",
+        "sources": {
+          "360": "media/deepseek/riceHappy-360.mp4",
+          "720": "media/deepseek/riceHappy-720.mp4"
+        }
+      },
+      "empty": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "2d9a349e55d8265f826616b944292ae9a305a6bf452246f314dbd5cb49c1506c",
+        "sources": {
+          "360": "media/deepseek/empty-360.mp4",
+          "720": "media/deepseek/empty-720.mp4"
+        }
+      },
+      "steal": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "cdb9e74797fe98bde3e63524cb5a9a90a5511a432e32b47ae8da76174a5bcafe",
+        "sources": {
+          "360": "media/deepseek/steal-360.mp4",
+          "720": "media/deepseek/steal-720.mp4"
+        }
+      },
+      "pile": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "51ca69e95cfbab7ca9fe5d11cbad93e4b9b6c097885a92b5c28843911c89106b",
+        "sources": {
+          "360": "media/deepseek/pile-360.mp4",
+          "720": "media/deepseek/pile-720.mp4"
+        }
+      },
+      "sleep": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "90cbca4c8a5ea0d9b74c6d5207a590d475b915a5fdaa0b0dc649af0b2a9893bd",
+        "sources": {
+          "360": "media/deepseek/sleep-360.mp4",
+          "720": "media/deepseek/sleep-720.mp4"
+        }
+      },
+      "chain": {
+        "duration": 8.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 192,
+        "sourceSha256": "d13a3dd848b603a08b1189d240f616f9dee129220be00ab9d2d2ec962bbf8deb",
+        "sources": {
+          "360": "media/deepseek/chain-360.mp4",
+          "720": "media/deepseek/chain-720.mp4"
+        }
+      },
+      "dance": {
+        "duration": 10.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 240,
+        "sourceSha256": "e6cdfa4c7f15c386d38b3a659c9266bc449e2ab63ab78ce50f503aea9ee1a7b8",
+        "sources": {
+          "360": "media/deepseek/dance-360.mp4",
+          "720": "media/deepseek/dance-720.mp4"
+        }
+      }
+    },
+    "gpt": {
+      "idle": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "98ec65caca082c2c6a779cbd93e8548c418ace16f98f4516764c2c142ac992f4",
+        "sources": {
+          "360": "media/gpt/idle-360.mp4",
+          "720": "media/gpt/idle-720.mp4"
+        }
+      },
+      "thinking": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "745879d081b7552b87eb48d5eef21963eed046dafbab7a00ea59798f66c985d9",
+        "sources": {
+          "360": "media/gpt/thinking-360.mp4",
+          "720": "media/gpt/thinking-720.mp4"
+        }
+      },
+      "typing": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "065e18612faf36ec8189ee0dc9bb1a57de3e241484f93a0d15fb272db98d8e4e",
+        "sources": {
+          "360": "media/gpt/typing-360.mp4",
+          "720": "media/gpt/typing-720.mp4"
+        }
+      },
+      "idea": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "5e9ccf6f842e42315db2b08f41d393a5fbd4081d2f684df41501598463cf7f89",
+        "sources": {
+          "360": "media/gpt/idea-360.mp4",
+          "720": "media/gpt/idea-720.mp4"
+        }
+      },
+      "happy": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "cdeaacc1074d241a0b6b73b0e9dddf75071aa88738026cec770752f6f82bb949",
+        "sources": {
+          "360": "media/gpt/happy-360.mp4",
+          "720": "media/gpt/happy-720.mp4"
+        }
+      },
+      "error": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "537a57f338abbd939a90c1ac1308bb5cdd396e6060bf18b5a39a17799235797e",
+        "sources": {
+          "360": "media/gpt/error-360.mp4",
+          "720": "media/gpt/error-720.mp4"
+        }
+      },
+      "wave": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "71af0668c9be583967d2d584463482f5041d46acc321deaf1232ed1c1cbfc181",
+        "sources": {
+          "360": "media/gpt/wave-360.mp4",
+          "720": "media/gpt/wave-720.mp4"
+        }
+      },
+      "probe": {
+        "duration": 10.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 240,
+        "sourceSha256": "fd2a4c885f618c00791d977c8d27b2c3775400eab99612efbae747add5b6f603",
+        "sources": {
+          "360": "media/gpt/probe-360.mp4",
+          "720": "media/gpt/probe-720.mp4"
+        }
+      },
+      "snapshot": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "1a50d899be7b35b14c9b9267d3e8e7c968fd6d664abb7c8f131e9d24fcbc1a9b",
+        "sources": {
+          "360": "media/gpt/snapshot-360.mp4",
+          "720": "media/gpt/snapshot-720.mp4"
+        }
+      },
+      "gate": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "0ff283e7b3990ebaf6a7197cd494f6e1aa418eedf0cae7d21b9453c32eb3466b",
+        "sources": {
+          "360": "media/gpt/gate-360.mp4",
+          "720": "media/gpt/gate-720.mp4"
+        }
+      },
+      "smoke": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 864,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "1b850dc99c31b142dec6cfd113e3748dba5678541d26fbbc0fe22b55d28d8bd5",
+        "sources": {
+          "360": "media/gpt/smoke-360.mp4",
+          "720": "media/gpt/smoke-720.mp4"
+        }
+      },
+      "matrix": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 936,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "296872baacd6f903d82272219c0b2bd9a8666fc3c0a5cae5de7eee73c7cc89a2",
+        "sources": {
+          "360": "media/gpt/matrix-360.mp4",
+          "720": "media/gpt/matrix-720.mp4"
+        }
+      },
+      "ready": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "39250c1370517b16d90739696826fef8b78c240a07a3611e9a713ab2b23afa5e",
+        "sources": {
+          "360": "media/gpt/ready-360.mp4",
+          "720": "media/gpt/ready-720.mp4"
+        }
+      },
+      "sleep": {
+        "duration": 4.0,
+        "fps": 24.0,
+        "width": 720,
+        "height": 720,
+        "frames": 96,
+        "sourceSha256": "7e1502784d3b4adca50f28bdb4bc00e55c8fdf20c3cc7f7de5d132180ac430f3",
+        "sources": {
+          "360": "media/gpt/sleep-360.mp4",
+          "720": "media/gpt/sleep-720.mp4"
+        }
+      }
+    }
+  }
+}
