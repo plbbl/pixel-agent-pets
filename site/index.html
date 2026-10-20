@@ -1,16 +1,38 @@
 <!doctype html>
-<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pixel Agent Pets · 安装</title>
-<style>
-:root{color-scheme:light dark}*{box-sizing:border-box}body{margin:0;background:#faf8f3;color:#302f2b;font:15px/1.7 system-ui,-apple-system,sans-serif}main{max-width:950px;margin:64px auto;padding:0 24px}h1{font-size:38px;letter-spacing:-1.5px;line-height:1.2;margin:0 0 14px}h2{font-size:20px;margin-top:36px}p{max-width:710px;color:#67645c}a{color:inherit;text-underline-offset:3px}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:32px 0}.card{background:#fff;border:1px solid #e8e3d8;border-radius:18px;padding:24px 12px;text-align:center}.card img{width:96px;height:104px;image-rendering:pixelated;display:block;margin:0 auto 12px}.card strong{display:block}.install{display:inline-block;margin-top:16px;padding:8px 15px;border-radius:9px;background:#302f2b;color:#fff;text-decoration:none;font-size:13px}code,pre{font:13px/1.8 ui-monospace,monospace}pre{background:#eeeae1;padding:20px;border-radius:12px;overflow:auto}.small{font-size:13px}footer{margin-top:48px;padding:20px 0;border-top:1px solid #e8e3d8;color:#777;font-size:12px}@media(max-width:650px){main{margin:32px auto}.cards{grid-template-columns:repeat(2,1fr)}h1{font-size:30px}}@media(prefers-color-scheme:dark){body{background:#1f211f;color:#f4f1e9}p{color:#b6b3ac}.card{background:#292c29;border-color:#42453f}.install{background:#eeeae1;color:#282b27}pre{background:#30332e}}
-</style>
-<main><h1>Pixel Agent Pets</h1><p>像素 Claude、纯白 GPT、DeepSeek 和原版 Clawd。使用 Codex 原生宠物接口，或安装到官方 DeepSeek Harness。</p><div class="cards" id="cards"></div>
-<h2>Codex：点角色安装</h2><p>上面的按钮会请求打开 Codex，并显示官方安装预览。确认后选用即可；浏览器若询问是否打开 Codex，请允许。只下载对应的 PNG，不运行第三方脚本。</p><p>本地文件安装后：按 <b>⌘,</b> → 左侧 <b>Mini 与虚拟宠物</b> → 宠物列表旁的小圆形刷新箭头 → 选角色。旧版入口叫 Pets。开启宠物显示开关后，它会根据 Codex 自己的任务状态活动。</p>
-<h2>DSH：安装完整动作</h2><pre>git clone https://github.com/plbbl/pixel-agent-pets.git
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Claude、GPT、DeepSeek 和原版 Clawd。四只像素宠物，66 套完整动作，陪你在 Codex 与 DeepSeek Harness 工作。">
+<meta name="theme-color" content="#f8f6ef"><meta property="og:title" content="Pixel Agent Pets — A little life on your desktop."><meta property="og:image" content="https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/docs/media/cover.png">
+<title>Pixel Agent Pets — 给桌面一点小脾气</title><link rel="icon" href="claude.png"><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="nav"><a class="wordmark" href="#"><span class="pixel-mark" aria-hidden="true">✳</span> Pixel Agent Pets</a><nav aria-label="主导航"><a href="#theater">动作剧场</a><a href="#install">安装</a><a href="https://github.com/plbbl/pixel-agent-pets" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a></nav></header>
+<main>
+<section class="hero" aria-labelledby="hero-title">
+<div class="hero-copy"><div><p class="eyebrow">SMALL PIXELS. BIG PERSONALITIES.</p><h1 id="hero-title">桌面很大，<br>留一点给<span>可爱。</span></h1></div><div class="hero-note"><p>Claude 会怀疑你，GPT 还在走流程，<br>DeepSeek 已经开饭了。<br>还有一只，熟悉的小 Clawd。</p><div class="hero-links"><a class="button primary" href="#theater">看它们动起来 <span>↓</span></a><a class="text-link" href="#install">带回桌面 ↗</a></div></div></div>
+<div class="hero-art"><span class="orbit-note">your tiny coworkers, reporting for duty.</span><canvas id="group" width="1120" height="360" aria-label="Claude、GPT、DeepSeek 和 Clawd 四只像素宠物的完整待机动画"></canvas><div class="cast-names"><span>CLAUDE <i>一眼看穿你</i></span><span>GPT <i>先确认一下</i></span><span>DEEPSEEK <i>先吃一口饭</i></span><span>CLAWD <i>原版小螃蟹</i></span></div></div>
+<div class="hero-foot"><span>MADE FOR CODEX & DEEPSEEK HARNESS</span><span>四个角色 · 66 套动作 · 全部本地播放</span></div>
+</section>
+<section class="theater section" id="theater" aria-labelledby="theater-title">
+<div class="section-top"><p class="eyebrow">01 / THE LITTLE THEATER</p><h2 id="theater-title">每一帧，<br>都有点<span>戏。</span></h2><p class="section-intro">原来的动作，原来的像素。<br>不抽成几张图，完整播给你看。</p></div>
+<div class="theater-layout"><aside class="cast-picker"><div class="roles" role="tablist" aria-label="选择宠物">
+<button class="role active" role="tab" aria-selected="true" data-character="claude"><span class="role-index">01</span><span>Claude<small>认真，但有一点怀疑。</small></span><span class="role-count">12</span></button>
+<button class="role" role="tab" aria-selected="false" data-character="gpt"><span class="role-index">02</span><span>GPT<small>可以开始了。先确认一下。</small></span><span class="role-count">14</span></button>
+<button class="role" role="tab" aria-selected="false" data-character="deepseek"><span class="role-index">03</span><span>DeepSeek<small>雷霆思考，光速开饭。</small></span><span class="role-count">15</span></button>
+<button class="role" role="tab" aria-selected="false" data-character="clawd"><span class="role-index">04</span><span>Clawd<small>那个原汁原味的小家伙。</small></span><span class="role-count">25</span></button></div>
+<div class="action-picker"><label for="action">挑一个动作</label><select id="action" aria-label="选择完整动画"></select></div><div class="state-demo"><span class="mini-label">也可以试试工作状态</span><div id="states"><button data-state="thinking">思考</button><button data-state="tools">工具调用</button><button data-state="waiting">等确认</button><button data-state="done">完成</button></div></div>
+</aside><div class="stage-wrap"><div class="stage" role="tabpanel" aria-label="完整动作预览"><span class="stage-label">LIVE PIXEL PREVIEW</span><div id="caption" class="pet-caption" aria-live="off"></div><canvas id="solo" width="640" height="380" aria-label="所选宠物的完整动作"></canvas><span class="stage-corner" aria-hidden="true">＋</span><div class="stage-ground"></div></div><div class="transport"><button id="play" class="play-button" aria-label="暂停动画">Ⅱ</button><input id="timeline" type="range" min="0" max="194" value="0" aria-label="动画帧"><output id="counter">001 / 195</output><button id="replay" class="replay" aria-label="从头重播">↻</button></div><div class="clip-info"><span id="clip-info">完整演出 · 195 帧 · 20 fps</span><label><input type="checkbox" id="loop"> 循环播放</label></div></div></div>
+</section>
+<section class="install section" id="install" aria-labelledby="install-title"><div class="section-top"><p class="eyebrow">02 / BRING THEM HOME</p><h2 id="install-title">你工作，<br>它们<span>陪着。</span></h2><p class="section-intro">模型继续干正事。<br>小家伙们，负责活灵活现。</p></div>
+<div class="install-options"><article class="installation"><span class="path-number">A</span><p class="eyebrow">CODEX · FULL ANIMATION</p><h3>完整动作伴侣</h3><p>macOS 原生透明小窗口。保留全部动作与字幕，跟随本地 Codex 活动：思考、工具、等待、结束。</p><a class="button primary" id="full-download" href="https://github.com/plbbl/pixel-agent-pets/releases/latest">下载 macOS 完整版 <span>↗</span></a><p class="fine">独立伴侣窗口，不修改官方 Codex。本地读取活动事件；不上传会话。</p><details><summary>从源码安装</summary><pre><code>git clone https://github.com/plbbl/pixel-agent-pets.git
 cd pixel-agent-pets
 npm ci
-node scripts/cli.mjs install --dsh --profile web</pre><p>重新打开这个 DSH profile，右键宠物可随时切换。完整 66 个动作、工作状态与本地短字幕。无需模型请求。</p>
-<p class="small">Codex 原生版使用 9 个固定状态；运行中合并思考、输出与工具，完成未读时庆祝，等待确认和出错分别有动作。原生接口不支持完整剧情或自定义字幕。</p>
-<p><a href="https://github.com/plbbl/pixel-agent-pets">源码与详细说明</a> · <a href="https://github.com/plbbl/pixel-agent-pets/releases/latest">下载最新版</a></p><footer>独立同人项目，与 OpenAI、Anthropic、DeepSeek 无隶属关系。公司标识与原版 Clawd 的权利属于各权利人。参阅仓库 NOTICE。</footer></main>
-<script>
-const names={claude:'像素 Claude',gpt:'纯白 GPT',deepseek:'像素 DeepSeek',clawd:'原版 Clawd'};for(const[id,name]of Object.entries(names)){const card=document.createElement('section');card.className='card';const img=document.createElement('img');img.src=id+'.png';img.alt=name;card.append(img);const title=document.createElement('strong');title.textContent=name;card.append(title);const link=document.createElement('a');link.className='install';link.textContent='在 Codex 中安装';link.href='codex://pets/install?'+new URLSearchParams({name,description:'Pixel Agent Pets · '+name,imageUrl:'https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/codex/'+id+'/spritesheet.png',spriteVersionNumber:'1'});card.append(link);document.querySelector('#cards').append(card);}
-</script></html>
+node scripts/cli.mjs install --codex-full</code></pre><p class="fine">需 macOS 13+ 与 Xcode Command Line Tools。预编译 App 无需 Node.js。</p></details></article>
+<article class="installation"><span class="path-number">B</span><p class="eyebrow">DEEPSEEK HARNESS · PLUGIN</p><h3>直接住进输入框</h3><p>安装到官方 DSH 的 web profile，右键切换宠物。66 套动作，随真实任务状态自动出场。</p><div class="command"><code>node scripts/cli.mjs install --dsh --profile web</code><button id="copy-command" aria-label="复制 DSH 安装命令">复制</button></div><p class="fine">先克隆仓库并运行 npm ci，再执行上面的命令。重开对应的 DSH profile 即可。</p><a class="text-link" href="https://github.com/plbbl/pixel-agent-pets#安装">查看完整步骤 ↗</a></article></div>
+<details class="native-install"><summary><span>也保留了 Codex 官方原生版</span><span class="summary-note">9 种固定状态 · 精简图集</span></summary><p>原生宠物槽只接收固定图集，无法承载全部完整动作。适合只想使用官方宠物栏的情况；想看完整演出，请选上面的完整动作伴侣。</p><div id="native-links" class="native-links"></div><p class="fine">本地安装后按 ⌘, → Mini 与虚拟宠物 → 圆形刷新箭头 → 选中角色。</p></details>
+</section>
+<section class="notes section"><p class="eyebrow">TINY, ON PURPOSE.</p><div class="note-grid"><div><h3>小像素，大动作。</h3><p>固定脚底线，原帧顺序播放。完整动作带到桌面，表情和张力都留下来。</p></div><div><h3>只负责陪伴。</h3><p>不调用模型，不改 CLI 内核。字幕只是本地的小演出，不会写进提示词。</p></div><div><h3>安静地待着。</h3><p>有限图片缓存，静止时不重绘。隐藏时停表，也尊重系统的减少动态效果。</p></div></div></section>
+<footer><a class="wordmark" href="#"><span class="pixel-mark" aria-hidden="true">✳</span> Pixel Agent Pets</a><p>Made with little pixels & a little too much personality.</p><div><a href="https://github.com/plbbl/pixel-agent-pets">GitHub ↗</a><a href="https://github.com/plbbl/pixel-agent-pets/blob/main/NOTICE.md">作品与来源</a></div><small>独立同人项目，与 OpenAI、Anthropic、DeepSeek 无隶属关系。</small></footer>
+</main><script type="module" src="gallery.js"></script>
+</body></html>

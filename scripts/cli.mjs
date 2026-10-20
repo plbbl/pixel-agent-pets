@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 import fs from'node:fs/promises';import path from'node:path';import{fileURLToPath}from'node:url';
-import{installCodex,uninstallCodex,installDSH,uninstallDSH,homes,exists,profileDirectory,characterIDs,packageName}from'./install-lib.mjs';
+import{installCodex,uninstallCodex,installDSH,uninstallDSH,homes,exists,profileDirectory,characterIDs,packageName,installFullCompanion,uninstallFullCompanion}from'./install-lib.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),args=process.argv.slice(2),command=args[0]??'help';
 const value=key=>{const i=args.indexOf(key);if(i<0)return undefined;const v=args[i+1];if(!v||v.startsWith('--'))throw Error(key+' requires a value');return v;};
 async function main(){
  const h=homes(),profile=value('--profile')??'web';profileDirectory(h.dsh,profile);
+ if(command==='install'&&args.includes('--codex-full')){console.log(JSON.stringify(await installFullCompanion(root),null,2));return;}
+ if(command==='uninstall'&&args.includes('--codex-full')){console.log(JSON.stringify(await uninstallFullCompanion(),null,2));return;}
  if(command==='install'){
   const {buildAll}=await import('./build.mjs');await buildAll();
   const specific=args.includes('--codex')||args.includes('--dsh'),result={};
@@ -23,6 +25,6 @@ async function main(){
   let dsh;try{const p=JSON.parse(await fs.readFile(path.join(profileDirectory(h.dsh,profile),'package.json'),'utf8'));dsh={profile,enabled:p.dsh?.profile?.bundles?.includes(packageName)??false,linked:!!p.dependencies?.[packageName]};}catch{dsh={profile,installed:false};}
   console.log(JSON.stringify({node:process.versions.node,codex,dsh},null,2));return;
  }
- console.log(`Pixel Agent Pets\n\nnode scripts/cli.mjs install [--codex] [--dsh] [--profile web]\nnode scripts/cli.mjs uninstall --codex\nnode scripts/cli.mjs uninstall --dsh --profile web\nnode scripts/cli.mjs doctor [--profile web]\nnode scripts/cli.mjs import-clawd [--source path/to/app.asar]\n\nFour included pets. No API key or model request. No official app modification.`);
+ console.log(`Pixel Agent Pets\n\nnode scripts/cli.mjs install [--codex-full] [--codex] [--dsh] [--profile web]\nnode scripts/cli.mjs uninstall --codex\nnode scripts/cli.mjs uninstall --dsh --profile web\nnode scripts/cli.mjs doctor [--profile web]\nnode scripts/cli.mjs import-clawd [--source path/to/app.asar]\n\nFour included pets. No API key or model request. No official app modification.`);
 }
 main().catch(e=>{console.error(e.message);process.exitCode=1;});

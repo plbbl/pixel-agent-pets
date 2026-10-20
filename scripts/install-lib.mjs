@@ -40,3 +40,16 @@ export async function uninstallDSH(dshHome,profile,{run=spawnSync}={}){
  const result=run(process.env.PIXEL_PETS_DSH_BIN??'dsh',['plugin','--profile',profile,'remove',packageName],{stdio:'inherit',shell:false,env:{...process.env,DSH_HOME:dshHome}});if(result.error||result.status!==0)throw Error('The bundle is disabled; run dsh plugin --profile '+profile+' remove '+packageName+' to finish removing the package.');return {profile,removed:true};
 }
 export function homes(){return {codex:process.env.CODEX_HOME??path.join(os.homedir(),'.codex'),dsh:process.env.DSH_HOME??path.join(os.homedir(),'.dsh')};}
+
+export async function installFullCompanion(repo,{applications=path.join(os.homedir(),'Applications')}={}){
+ const {buildDesktop}=await import('./build-desktop.mjs');const source=await buildDesktop();
+ const target=path.join(applications,'Pixel Agent Pets.app'),backups=path.join(os.homedir(),'Library','Application Support','Pixel Agent Pets','backups');await fs.mkdir(applications,{recursive:true});
+ if(await exists(target)){let marker;try{marker=JSON.parse(await fs.readFile(path.join(target,'Contents','Resources','pixel-agent-pets.json'),'utf8'));}catch{}if(marker?.package!==packageName)throw Error('An unrelated app exists at '+target);await fs.mkdir(backups,{recursive:true});await fs.rename(target,path.join(backups,'Pixel Agent Pets-'+stamp()+'.app'));}
+ await fs.cp(source,target,{recursive:true});const {version}=JSON.parse(await fs.readFile(path.join(repo,'package.json'),'utf8'));await fs.writeFile(path.join(target,'Contents','Resources','pixel-agent-pets.json'),JSON.stringify({package:packageName,version}));
+ for(const a of ['com.apple.FinderInfo','com.apple.ResourceFork'])spawnSync('/usr/bin/xattr',['-dr',a,target],{stdio:'ignore'});
+ if(spawnSync('/usr/bin/codesign',['--force','--sign','-',target],{stdio:'inherit'}).status!==0)throw Error('App signing failed');
+ return {application:target,animations:66,source:'local Codex activity events',launch:'Open Pixel Agent Pets.app in Finder'};
+}
+export async function uninstallFullCompanion({applications=path.join(os.homedir(),'Applications')}={}){
+ const target=path.join(applications,'Pixel Agent Pets.app');if(!await exists(target))return {removed:false};const marker=JSON.parse(await fs.readFile(path.join(target,'Contents','Resources','pixel-agent-pets.json'),'utf8'));if(marker.package!==packageName)throw Error('The app is not owned by this installer');const backup=path.join(os.homedir(),'Library','Application Support','Pixel Agent Pets','backups','uninstalled-'+stamp()+'.app');await fs.mkdir(path.dirname(backup),{recursive:true});await fs.rename(target,backup);return {removed:true,backup};
+}
