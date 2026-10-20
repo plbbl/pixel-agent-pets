@@ -1,6 +1,6 @@
 {
   "name": "dsh-pixel-agent-pets",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Four local pixel companions for Codex desktop and official DeepSeek Harness",
   "type": "module",
   "license": "MIT",
@@ -41,7 +41,8 @@
     "build:site": "node scripts/build-site.mjs",
     "build:desktop": "node scripts/build-desktop.mjs",
     "build:media": "node scripts/build-media.mjs",
-    "build:codex-native": "node scripts/build-codex-native.mjs"
+    "build:codex-native": "node scripts/build-codex-native.mjs",
+    "build:installer": "node scripts/build-installer.mjs"
   },
   "dependencies": {
     "@electron/asar": "3.4.1",

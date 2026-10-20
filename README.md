@@ -38,82 +38,83 @@
 
 ## 安装
 
-### Codex：使用原来的宠物位置
+**DSH 一键安装已就绪；Codex 原位完整接入仍受 macOS 签名条件阻塞，暂不可自动安装。**不把精简图集或额外窗口当作原位完整支持。
+
+### Codex：原位完整播放器预览 · 签名验证中
+
+原位播放器与接入源码已经完成，与 DSH 共用 `Player` 和行为逻辑，包含 66 套完整动作、剧情字幕与显示控制；目标是 **Codex 原来的宠物窗口**，不增加悬浮窗口，CLI 与模型内核保持不变。
+
+**自动安装暂不可用。**实际签名核验发现，外层应用临时本地签名无法通过 macOS 的库验证，所需的受认可签名条件尚未满足。当前安装器在修改应用前停止，不会关闭系统安全保护来强行安装。
+
+源码接入按 **macOS Codex 26.1013.40934（20770）** 核验；这不是可用安装版本的承诺。播放器逐帧一致性、备份与恢复有自动测试，真实原位运行仍未完成验证。
+
+<details>
+<summary>为什么不能直接重新签名？</summary>
+
+macOS 会验证应用加载的库是否符合签名条件。临时签名不足以满足当前应用的库验证；仅重签外层应用会得到无法正常加载的安装结果。完整恢复备份与源码测试不能替代这项验证，因此本版本只提供原位集成预览，不提供可执行的 Codex 一键安装入口。
+
+</details>
+
+### 官方 DeepSeek Harness：直接住进输入框
+
+复制到终端即可。安装器下载已构建资源并逐文件校验；无需克隆仓库、`npm install` 或手动复制图集。缺少 Node.js 时会准备独立运行环境，不替换系统 Node。宠物不需要 API Key。
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- --dsh
+```
+
+先安装并启动过[官方 DSH 网页客户端](https://github.com/deepseek-ai/deepseek-harness)。只有一个网页 profile 时自动选择；有多个时在终端选一个。已有 profile 缺失依赖或损坏时会停止并保留原配置，不修补其他插件、模型或权限设置。
+
+安装后重新打开对应 DSH 网页窗口。**右键宠物切换角色、大小和清晰度**；自动清晰度根据显示大小和屏幕像素密度选择 80/160/320px 源，调整时继续当前动作。已实测官方 **0.1.0-rc.6 web 客户端**；终端 TUI 不显示网页宠物。
+
+### 检查与恢复
+
+使用同一个入口即可检查或卸载，不需要寻找下载目录：
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- doctor --dsh
+
+curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- uninstall --dsh
+```
+
+DSH 卸载只移除本插件。`doctor` 检查安装文件与配置。Codex 原位安装尚未开放；不能把安装器测试或文件检查称作真实运行验收。[详细安装、可选参数与恢复说明](docs/installation.md)
+
+### 小，也要认真
+
+| | Codex 原位集成预览 | DSH 插件 |
+|---|---|---|
+| 当前状态 | 签名条件阻塞，暂不可安装 | 一键安装可用 |
+| 位置 | 原来的宠物窗口 | 输入区 |
+| 动作与触发 | 共享完整 66 套动作与行为逻辑 | 共享完整 66 套动作与行为逻辑 |
+| 状态来源 | 当前原生任务、工具与输入状态 | 官方客户端 UI 状态 |
+| 显示控制 | 右键角色、大小、清晰度 | 右键角色、大小、清晰度 |
+
+固定脚底线、图片解码后再切换、有限缓存；隐藏时停表，尊重系统“减少动态效果”。动画不调用模型、不改变 CLI 内核，也不把字幕写进提示词。当前输入是否含中文只生成一个本地布尔值，不传输输入原文。
+
+Claude 的中文剧情只是本地角色表演：不识别国籍，也不会封禁任何账户。详见[行为说明](docs/behavior.md)。
+
+<details>
+<summary><b>可选：9 状态兼容图集与开发</b></summary>
+
+只想添加官方可识别的兼容图集，可使用[展示页的兼容入口](https://plbbl.github.io/pixel-agent-pets/#native-install)。这是 **9 种固定状态的精简版**，不包含完整动作逻辑与剧情字幕，不能替代原位完整集成。
+
+从源码开发需要 Node.js 与项目依赖：
 
 ```sh
 git clone https://github.com/plbbl/pixel-agent-pets.git
 cd pixel-agent-pets
 npm ci
-node scripts/cli.mjs install --codex
-```
-
-`⌘,` → **Mini 与虚拟宠物** → 列表旁圆形刷新箭头 → 选中角色。也可以从[展示页的原生安装入口](https://plbbl.github.io/pixel-agent-pets/#install)添加。
-
-这会安装四套**原生兼容图集**，由 Codex 原来的宠物窗口播放。Claude、GPT、DeepSeek 使用真实高清源，Clawd 保留原像素；在「Mini 与虚拟宠物 → 外观」可调整原生大小（80–224px）。添加 `--quality-choices` 可以同时安装三套 80px 像素选项。
-
-当前官方渲染器仍只接收 9 种固定状态，帧数与节奏由应用决定，因此这个安装入口**尚不能播放完整动作库或剧情字幕**。仓库另有共享完整播放器与展示层接入提案，尚未安装进官方应用。不会把精简图集或额外窗口描述成原位完整支持。
-
-### 官方 DeepSeek Harness：完整动作
-
-先安装并启动过[官方 DSH](https://github.com/deepseek-ai/deepseek-harness)，再在克隆的仓库中运行：
-
-```sh
-npm ci
-node scripts/cli.mjs install --dsh --profile web
-```
-
-重开对应 DSH profile。**右键宠物切换角色、大小和清晰度**，保留完整动作与上方短字幕。自动清晰度随显示大小和屏幕精度选择 80/160/320px 源；调整时继续当前动作。已实测官方 **0.1.0-rc.6 web 客户端**；终端 TUI 不显示这个网页插件。桌面包装器需要指定它实际使用、且已存在的 profile。
-
-<details>
-<summary><b>可选：独立 macOS 完整动作伴侣</b></summary>
-
-另有独立 App 可播放完整动作，**它会额外创建悬浮窗口，不属于 Codex 原位方案**。如果你只接受 Codex 原来的宠物位置，请使用上面的原生兼容版。
-
-在 [Releases](https://github.com/plbbl/pixel-agent-pets/releases/latest) 下载 **Pixel-Agent-Pets-macOS.zip**，解压并打开 **Pixel Agent Pets.app**。macOS 13+，支持 Apple Silicon 与 Intel。右键切换角色、预览完整动作；左键拖动位置。菜单栏爪印可重新显示或退出。
-
-预编译 App 无需 Node.js、API Key、辅助功能或录屏权限。开源构建使用本地签名，尚未经过 Apple 公证；系统确认由你在 macOS 中完成。
-
-从源码构建需要 Node.js 20+ 与 Xcode Command Line Tools：
-
-```sh
-node scripts/cli.mjs install --codex-full
-```
-
-打开 `~/Applications/Pixel Agent Pets.app`。源码构建只签名本项目自己的 App，不修改 Codex。
-
-</details>
-
-### 工作状态与本地数据
-
-| | Codex 原位兼容版 | DSH 插件 | 可选独立伴侣 |
-|---|---|---|---|
-| 位置 | Codex 原宠物窗口 | DSH 输入区 | 额外悬浮窗口 |
-| 动作 | 9 行固定图集 | 66 套完整动作 | 66 套完整动作 |
-| 触发 | 官方原生状态机 | 官方 UI 状态 | 本地活动事件 |
-| 剧情与字幕 | 当前不支持 | 支持 | 支持 |
-| 角色切换 | 官方设置 | 右键 | 右键 / 菜单栏 |
-
-固定脚底线、解码后切画、有限图片缓存。静止时不重复画，隐藏时停表；尊重系统“减少动态效果”。不改模型内核，不把字幕写进提示词，不为动画发起模型请求。
-
-可选独立伴侣在本机增量读取 `CODEX_HOME/sessions` 的活动记录，提取事件类型、工具名、运行状态；提示词只计算“是否含中文”。原文不保存、不上传，不扫描整个历史。这个文件格式不是稳定的官方 API，遇到不认识的事件会忽略。原生图集与 DSH 插件不需要这个读取步骤。
-
-Claude 的中文剧情只是本地角色表演：不识别国籍，也不会封禁任何账户。详见[行为说明](docs/behavior.md)。
-
-### 开发与卸载
-
-```sh
-npm run build                   # DSH 与原生兼容图集
-npm run build:site              # 展示页
-npm run build:desktop           # 可选独立 App
+npm run build
 npm run check
 npm test
 
-node scripts/cli.mjs uninstall --codex
-node scripts/cli.mjs uninstall --dsh --profile web
-node scripts/cli.mjs uninstall --codex-full
+# 仅安装旧的兼容图集
+node scripts/cli.mjs install --codex
 ```
 
-卸载前先退出独立 App。安装器只处理本项目拥有的文件，保留可恢复备份，不覆盖其他宠物、插件、授权策略或 API Key。[详细安装说明](docs/installation.md)
+兼容图集可在 `⌘, → Mini 与虚拟宠物` 中刷新并选中。旧独立 macOS 伴侣已归档；它会额外创建窗口，不在当前安装流程中推荐，也不能用于宣称原位完整支持。
+
+</details>
 
 ---
 

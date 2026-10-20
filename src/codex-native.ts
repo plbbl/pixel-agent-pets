@@ -3,6 +3,7 @@ import {hdAssetURL,petView,type HDManifest,type PetQuality,type PetView} from '.
 import {names,type Activity,type Character,type Pack} from './policy';
 import metadata from '../.generated/native-packs.json';
 import hdMetadata from '../.generated/native-hd.json';
+export {ensureNativePetActive,activateNativePetOnce,recordNativePetOpenState,subscribeNativePetOpenState} from './codex-native-activation';
 export {recordCodexActivity,selectNativeActivityKey,setNativeChineseDraft,currentNativeActivity,mountBoundNativePet,setNativePetHostActions} from './codex-native-binding';
 export {activityFromCodex,activityForCodexSource,hasChineseDraft} from './codex-activity';
 export {installNativeComposerDraft,nativeDraftChannel} from './codex-composer-draft';

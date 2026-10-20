@@ -336,13 +336,20 @@ new ResizeObserver(() => { layout(); autoQuality(); }).observe(stage);
 window.addEventListener('resize', autoQuality);
 document.addEventListener('visibilitychange', syncVisibility);
 reduced.addEventListener('change', () => { pauseOrPlay(!reduced.matches); groupSignature = ''; clock(performance.now()); });
-query('#copy-command').addEventListener('click', async event => {
-  const button = event.currentTarget as HTMLButtonElement;
-  try { await navigator.clipboard.writeText('node scripts/cli.mjs install --dsh --profile web'); button.textContent = '已复制'; setTimeout(() => button.textContent = '复制', 1500); }
-  catch { button.textContent = '请选择命令复制'; }
-});
+for (const button of document.querySelectorAll<HTMLButtonElement>('[data-copy-target]')) {
+  const label = button.getAttribute('aria-label') ?? '复制安装命令';
+  let reset: number | undefined;
+  button.addEventListener('click', async () => {
+    const command = document.getElementById(button.dataset.copyTarget ?? '')?.textContent?.trim();
+    if (!command) return;
+    clearTimeout(reset);
+    try { await navigator.clipboard.writeText(command); button.textContent = '已复制'; button.setAttribute('aria-label', label + '，已复制'); }
+    catch { button.textContent = '请选中复制'; button.setAttribute('aria-label', label + '，请手动选择命令复制'); }
+    reset = window.setTimeout(() => { button.textContent = '复制'; button.setAttribute('aria-label', label); }, 1800);
+  });
+}
 for (const c of ids) {
-  const link = document.createElement('a'); link.textContent = names[c] + ' ↗';
+  const link = document.createElement('a'); link.textContent = names[c] + ' · 兼容图集 ↗';
   link.href = 'codex://pets/install?' + new URLSearchParams({name: names[c], imageUrl: 'https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/codex/' + c + '/spritesheet.png', spriteVersionNumber: '1'});
   query('#native-links').append(link);
 }
