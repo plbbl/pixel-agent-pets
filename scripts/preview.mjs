@@ -1,0 +1,4 @@
+import http from'node:http';import fs from'node:fs/promises';import path from'node:path';import{fileURLToPath}from'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),port=Number(process.env.PORT??19359);
+const server=http.createServer(async(req,res)=>{if(req.url==='/'||req.url==='/index.html'){res.setHeader('content-type','text/html; charset=utf-8');res.end('<!doctype html><html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pixel Agent Pets</title><body style="margin:0"><div id="root"></div><script type="module" src="/preview.js"></script></body></html>');return;}if(req.url==='/preview.js'){res.setHeader('content-type','text/javascript');res.end(await fs.readFile(path.join(root,'dist/preview.js')));return;}res.statusCode=404;res.end();});
+server.listen(port,'127.0.0.1',()=>console.log(`Preview: http://127.0.0.1:${port}`));

@@ -1,0 +1,260 @@
+{
+  "tileSize": 80,
+  "maxCache": 2,
+  "fps": 20,
+  "animations": {
+    "idle": {
+      "title": "等待",
+      "file": "idle.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": [
+        8,
+        44
+      ],
+      "poster": 20,
+      "bytes": 60961,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 44
+    },
+    "thinking": {
+      "title": "思考",
+      "file": "thinking.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": [
+        18,
+        38
+      ],
+      "poster": 20,
+      "bytes": 67241,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 38
+    },
+    "typing": {
+      "title": "打字",
+      "file": "typing.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": [
+        16,
+        48
+      ],
+      "poster": 20,
+      "bytes": 64873,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 48
+    },
+    "fast": {
+      "title": "极速打字",
+      "file": "fast.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 52,
+      "fps": 20,
+      "loop": [
+        10,
+        31
+      ],
+      "poster": 20,
+      "bytes": 48512,
+      "decodedBytes": 1536000,
+      "captions": [],
+      "sustain": 31
+    },
+    "happy": {
+      "title": "完成",
+      "file": "happy.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": null,
+      "poster": 20,
+      "bytes": 44591,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 79
+    },
+    "error": {
+      "title": "疑惑",
+      "file": "error.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": null,
+      "poster": 20,
+      "bytes": 68967,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 79
+    },
+    "hungry": {
+      "title": "讨饭",
+      "file": "hungry.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": null,
+      "poster": 20,
+      "bytes": 55568,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 79
+    },
+    "rice": {
+      "title": "吃大米饭",
+      "file": "rice.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": [
+        18,
+        48
+      ],
+      "poster": 20,
+      "bytes": 51504,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 48
+    },
+    "riceHappy": {
+      "title": "开饭",
+      "file": "riceHappy.png",
+      "width": 128,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": null,
+      "poster": 20,
+      "bytes": 59566,
+      "decodedBytes": 3276800,
+      "captions": [],
+      "sustain": 79
+    },
+    "empty": {
+      "title": "碗空了",
+      "file": "empty.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": null,
+      "poster": 20,
+      "bytes": 54050,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 79
+    },
+    "steal": {
+      "title": "偷电饭煲",
+      "file": "steal.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": null,
+      "poster": 20,
+      "bytes": 68331,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 79
+    },
+    "pile": {
+      "title": "堆米饭",
+      "file": "pile.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": null,
+      "poster": 20,
+      "bytes": 54862,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 79
+    },
+    "sleep": {
+      "title": "睡觉",
+      "file": "sleep.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": [
+        32,
+        56
+      ],
+      "poster": 20,
+      "bytes": 57491,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 40
+    },
+    "chain": {
+      "title": "长思维链",
+      "file": "chain.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 160,
+      "fps": 20,
+      "loop": [
+        60,
+        108
+      ],
+      "poster": 20,
+      "bytes": 74895,
+      "decodedBytes": 4096000,
+      "captions": [],
+      "sustain": 108
+    },
+    "dance": {
+      "title": "跳舞",
+      "file": "dance.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 200,
+      "fps": 20,
+      "loop": null,
+      "poster": 20,
+      "bytes": 196197,
+      "decodedBytes": 5120000,
+      "captions": [],
+      "sustain": 199
+    }
+  },
+  "alignment": {
+    "baseline": 67,
+    "root": "shoe-pair",
+    "actorHeight": 54,
+    "edgeRepair": "closed-outline-flood",
+    "version": 2
+  }
+}

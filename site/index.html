@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pixel Agent Pets · 安装</title>
+<style>
+:root{color-scheme:light dark}*{box-sizing:border-box}body{margin:0;background:#faf8f3;color:#302f2b;font:15px/1.7 system-ui,-apple-system,sans-serif}main{max-width:950px;margin:64px auto;padding:0 24px}h1{font-size:38px;letter-spacing:-1.5px;line-height:1.2;margin:0 0 14px}h2{font-size:20px;margin-top:36px}p{max-width:710px;color:#67645c}a{color:inherit;text-underline-offset:3px}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:32px 0}.card{background:#fff;border:1px solid #e8e3d8;border-radius:18px;padding:24px 12px;text-align:center}.card img{width:96px;height:104px;image-rendering:pixelated;display:block;margin:0 auto 12px}.card strong{display:block}.install{display:inline-block;margin-top:16px;padding:8px 15px;border-radius:9px;background:#302f2b;color:#fff;text-decoration:none;font-size:13px}code,pre{font:13px/1.8 ui-monospace,monospace}pre{background:#eeeae1;padding:20px;border-radius:12px;overflow:auto}.small{font-size:13px}footer{margin-top:48px;padding:20px 0;border-top:1px solid #e8e3d8;color:#777;font-size:12px}@media(max-width:650px){main{margin:32px auto}.cards{grid-template-columns:repeat(2,1fr)}h1{font-size:30px}}@media(prefers-color-scheme:dark){body{background:#1f211f;color:#f4f1e9}p{color:#b6b3ac}.card{background:#292c29;border-color:#42453f}.install{background:#eeeae1;color:#282b27}pre{background:#30332e}}
+</style>
+<main><h1>Pixel Agent Pets</h1><p>像素 Claude、纯白 GPT、DeepSeek 和原版 Clawd。使用 Codex 原生宠物接口，或安装到官方 DeepSeek Harness。</p><div class="cards" id="cards"></div>
+<h2>Codex：点角色安装</h2><p>上面的按钮会请求打开 Codex，并显示官方安装预览。确认后选用即可；浏览器若询问是否打开 Codex，请允许。只下载对应的 PNG，不运行第三方脚本。</p><p>本地文件安装后：按 <b>⌘,</b> → 左侧 <b>Mini 与虚拟宠物</b> → 宠物列表旁的小圆形刷新箭头 → 选角色。旧版入口叫 Pets。开启宠物显示开关后，它会根据 Codex 自己的任务状态活动。</p>
+<h2>DSH：安装完整动作</h2><pre>git clone https://github.com/plbbl/pixel-agent-pets.git
+cd pixel-agent-pets
+npm ci
+node scripts/cli.mjs install --dsh --profile web</pre><p>重新打开这个 DSH profile，右键宠物可随时切换。完整 66 个动作、工作状态与本地短字幕。无需模型请求。</p>
+<p class="small">Codex 原生版使用 9 个固定状态；运行中合并思考、输出与工具，完成未读时庆祝，等待确认和出错分别有动作。原生接口不支持完整剧情或自定义字幕。</p>
+<p><a href="https://github.com/plbbl/pixel-agent-pets">源码与详细说明</a> · <a href="https://github.com/plbbl/pixel-agent-pets/releases/latest">下载最新版</a></p><footer>独立同人项目，与 OpenAI、Anthropic、DeepSeek 无隶属关系。公司标识与原版 Clawd 的权利属于各权利人。参阅仓库 NOTICE。</footer></main>
+<script>
+const names={claude:'像素 Claude',gpt:'纯白 GPT',deepseek:'像素 DeepSeek',clawd:'原版 Clawd'};for(const[id,name]of Object.entries(names)){const card=document.createElement('section');card.className='card';const img=document.createElement('img');img.src=id+'.png';img.alt=name;card.append(img);const title=document.createElement('strong');title.textContent=name;card.append(title);const link=document.createElement('a');link.className='install';link.textContent='在 Codex 中安装';link.href='codex://pets/install?'+new URLSearchParams({name,description:'Pixel Agent Pets · '+name,imageUrl:'https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/codex/'+id+'/spritesheet.png',spriteVersionNumber:'1'});card.append(link);document.querySelector('#cards').append(card);}
+</script></html>

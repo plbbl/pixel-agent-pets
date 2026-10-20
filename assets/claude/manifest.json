@@ -1,0 +1,238 @@
+{
+  "tileSize": 80,
+  "maxCache": 2,
+  "fps": 20,
+  "animations": {
+    "idle": {
+      "title": "等待",
+      "file": "idle.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": [
+        13,
+        64
+      ],
+      "poster": 2,
+      "bytes": 19782,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 64
+    },
+    "typing": {
+      "title": "打字",
+      "file": "typing.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": [
+        20,
+        58
+      ],
+      "poster": 30,
+      "bytes": 40000,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 58
+    },
+    "reading": {
+      "title": "阅读",
+      "file": "reading.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": [
+        22,
+        58
+      ],
+      "poster": 30,
+      "bytes": 30647,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 58
+    },
+    "happy": {
+      "title": "完成",
+      "file": "happy.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": null,
+      "poster": 30,
+      "bytes": 49635,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 79
+    },
+    "sending": {
+      "title": "发送",
+      "file": "sending.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": null,
+      "poster": 30,
+      "bytes": 46122,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 79
+    },
+    "pointing": {
+      "title": "等待确认",
+      "file": "pointing.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": [
+        22,
+        56
+      ],
+      "poster": 30,
+      "bytes": 41884,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 56
+    },
+    "error": {
+      "title": "扶额",
+      "file": "error.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": null,
+      "poster": 30,
+      "bytes": 44037,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 79
+    },
+    "stopped": {
+      "title": "停止",
+      "file": "stopped.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": null,
+      "poster": 30,
+      "bytes": 40356,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 79
+    },
+    "dance": {
+      "title": "霹雳舞",
+      "file": "dance.png",
+      "width": 88,
+      "height": 80,
+      "columns": 10,
+      "frames": 160,
+      "fps": 20,
+      "loop": null,
+      "poster": 30,
+      "bytes": 132296,
+      "decodedBytes": 4505600,
+      "captions": [],
+      "sustain": 159
+    },
+    "thinking": {
+      "title": "思考",
+      "file": "thinking.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": [
+        20,
+        52
+      ],
+      "poster": 30,
+      "bytes": 44730,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 52
+    },
+    "confused": {
+      "title": "疑惑",
+      "file": "confused.png",
+      "width": 80,
+      "height": 80,
+      "columns": 10,
+      "frames": 80,
+      "fps": 20,
+      "loop": [
+        20,
+        52
+      ],
+      "poster": 30,
+      "bytes": 36237,
+      "decodedBytes": 2048000,
+      "captions": [],
+      "sustain": 52
+    },
+    "special": {
+      "title": "中文彩蛋",
+      "file": "special.png",
+      "width": 128,
+      "height": 80,
+      "columns": 10,
+      "frames": 195,
+      "fps": 20,
+      "loop": null,
+      "poster": 2,
+      "bytes": 914219,
+      "decodedBytes": 8192000,
+      "captions": [
+        {
+          "start": 1.3166666666666667,
+          "end": 2.1333333333333333,
+          "text": "中文？"
+        },
+        {
+          "start": 2.1333333333333333,
+          "end": 4.833333333333333,
+          "text": "中国人？"
+        },
+        {
+          "start": 4.833333333333333,
+          "end": 5.15,
+          "text": "检测到中国用户"
+        },
+        {
+          "start": 5.15,
+          "end": 6.783333333333333,
+          "text": "检测到中国用户"
+        },
+        {
+          "start": 8.133333333333333,
+          "end": 9.75,
+          "text": "your account is on hold"
+        }
+      ],
+      "sustain": 194
+    }
+  },
+  "alignment": {
+    "baseline": 67,
+    "root": "shoe-pair",
+    "actorHeight": 54,
+    "edgeRepair": "closed-outline-flood",
+    "version": 2
+  }
+}
