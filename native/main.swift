@@ -58,6 +58,7 @@ final class Companion: NSObject, NSApplicationDelegate {
     private var watcher: CodexWatcher?
     private var timer: Timer?
     private var state = Activity()
+    private var latestObserved = Activity()
     private var character = UserDefaults.standard.string(forKey: "character") ?? "claude"
     private var action = "", since = Date(), phaseSince = Date(), idleSince = Date()
     private var transient = false, hold = false, resting = false
@@ -99,7 +100,7 @@ final class Companion: NSObject, NSApplicationDelegate {
         localMouse = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved]) { [weak self] event in self?.updateHitRegion(); return event }
         updateHitRegion()
         let codexHome = ProcessInfo.processInfo.environment["CODEX_HOME"].map { URL(fileURLWithPath: $0) } ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".codex")
-        watcher = CodexWatcher(home: codexHome); watcher?.onChange = { [weak self] in if self?.following == true { self?.update($0) } }; watcher?.start()
+        watcher = CodexWatcher(home: codexHome); watcher?.onChange = { [weak self] value in self?.latestObserved = value; if self?.following == true { self?.update(value) } }; watcher?.start()
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(motionChanged), name: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification, object: nil)
         if let i = CommandLine.arguments.firstIndex(of: "--action"), CommandLine.arguments.count > i + 1 {
             following = false; play(CommandLine.arguments[i + 1], transient: true)
@@ -117,8 +118,6 @@ final class Companion: NSObject, NSApplicationDelegate {
     private func family(_ a: Activity) -> String { "\(a.busy):\(a.waiting):\(a.phase)" }
     private func update(_ next: Activity) {
         let old = state; state = next
-        if stopped { return }
-        if manualPreview { return }
         if family(old) != family(next) { phaseSince = Date() }
         if next.toolID != old.toolID && !next.toolID.isEmpty {
             let name = next.tool.lowercased()
@@ -127,6 +126,7 @@ final class Companion: NSObject, NSApplicationDelegate {
             selectedTool = policy.states[character]?[key] ?? "idle"; commandIndex += 1
         }
         if character == "claude", next.chinese, (!old.chinese || next.turnID != old.turnID), Date().timeIntervalSince(lastSpecial) > 20 { pendingSpecial = true }
+        if stopped || manualPreview { return }
         if next.waiting { base(urgent: true); return }
         if !next.errorID.isEmpty && next.errorID != old.errorID { play(policy.error[character] ?? "error", transient: true); return }
         if next.stopped && !old.stopped { play(policy.states[character]?["stopping"] ?? "idle", transient: true); return }
@@ -234,14 +234,24 @@ final class Companion: NSObject, NSApplicationDelegate {
         character = c; UserDefaults.standard.set(c, forKey: "character"); cache.removeAll(); order.removeAll(); view.previous = nil; view.image = nil; action = ""; pendingSpecial = false
         selectedTool = policy.states[c]?["tools-command-0"] ?? "idle"; transient = false; manualPreview = false; base(urgent: true); status.menu = menu()
     }
-    @objc private func preview(_ item: NSMenuItem) { if let name = item.representedObject as? String { window.orderFrontRegardless(); stopped = false; manualPreview = true; play(name, transient: true) } }
-    @objc private func toggleFollow() { following.toggle(); status.menu = menu() }
+    @objc private func preview(_ item: NSMenuItem) {
+        if let name = item.representedObject as? String {
+            window.orderFrontRegardless(); stopped = false; manualPreview = !reduced
+            if name == "special" { lastSpecial = Date(); pendingSpecial = false }
+            play(name, transient: true)
+        }
+    }
+    @objc private func toggleFollow() {
+        following.toggle(); manualPreview = false; transient = false
+        if following { update(latestObserved) } else { state = Activity(); base(urgent: true) }
+        status.menu = menu()
+    }
     @objc private func toggleVisible() {
-        if window.isVisible { window.orderOut(nil); stopped = true; timer?.invalidate(); revision += 1; cache.removeAll(); order.removeAll(); view.image = nil; view.previous = nil }
+        if window.isVisible { window.orderOut(nil); stopped = true; manualPreview = false; timer?.invalidate(); revision += 1; cache.removeAll(); order.removeAll(); view.image = nil; view.previous = nil }
         else { stopped = false; transient = false; window.orderFrontRegardless(); base(urgent: true) }
         status.menu = menu()
     }
-    @objc private func motionChanged() { transient = false; action = ""; base(urgent: true) }
+    @objc private func motionChanged() { transient = false; manualPreview = false; action = ""; base(urgent: true) }
     func applicationWillTerminate(_ notification: Notification) { timer?.invalidate(); watcher = nil; if let m = globalMouse { NSEvent.removeMonitor(m) }; if let m = localMouse { NSEvent.removeMonitor(m) } }
 }
 
