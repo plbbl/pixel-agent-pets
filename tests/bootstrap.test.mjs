@@ -38,7 +38,7 @@ async function runtimeFixture({system,machine,runtime,hash,oldNode=false,corrupt
  assert.equal(spawnSync('tar',['-czf',runtimeArchive,'-C',runtimeSource,runtimeName],{encoding:'utf8'}).status,0);
  // A restricted PATH makes Node genuinely unavailable to command lookup. Only
  // fixture executables and ordinary host shell utilities can be found there.
- for(const name of ['bash','tar','awk','mktemp','rm','mkdir','mv','date','dirname','cp'])await fs.symlink(systemTool(name),path.join(shim,name));
+ for(const name of ['bash','tar','gzip','awk','mktemp','rm','mkdir','mv','date','dirname','cp'])await fs.symlink(systemTool(name),path.join(shim,name));
  await fs.writeFile(path.join(shim,'uname'),'#!/bin/sh\ncase "$1" in -s) printf \'%s\\n\' "$BOOTSTRAP_TEST_OS";; -m) printf \'%s\\n\' "$BOOTSTRAP_TEST_ARCH";; *) exit 1;; esac\n',{mode:0o755});
  await fs.writeFile(path.join(shim,'curl'),'#!/bin/sh\npet_url=""\npet_out=""\nwhile [ "$#" -gt 0 ]; do\n case "$1" in https:*) pet_url="$1";; --output) shift; pet_out="$1";; esac\n shift\ndone\nprintf \'%s\\n\' "$pet_url" >> "$BOOTSTRAP_DOWNLOADS"\ncase "$pet_url" in */Pixel-Agent-Pets-Installer.tar.gz) cp "$BOOTSTRAP_ARCHIVE" "$pet_out";; */SHA256SUMS) cp "$BOOTSTRAP_SUMS" "$pet_out";; "$BOOTSTRAP_RUNTIME_URL") cp "$BOOTSTRAP_RUNTIME_ARCHIVE" "$pet_out";; *) exit 88;; esac\n',{mode:0o755});
  // The tiny offline runtime stands in for the checksum-pinned official tarball.
