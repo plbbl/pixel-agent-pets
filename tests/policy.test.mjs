@@ -24,3 +24,8 @@ test('DSH adapter prioritizes permissions and tools and never returns message bo
 test('engineering rituals rotate and captions stay outside prompts',()=>{
  assert.deepEqual([0,1,2,3].map(i=>p.toolAction('gpt','run_command',i)),['probe','gate','smoke','matrix']);assert.equal(p.toolAction('gpt','view_file'),'snapshot');assert.equal(p.captionAt('deepseek','rice',1000,{}),'吃大米饭……');
 });
+test('DSH retry and transport failures follow official snapshots without copying error text',()=>{
+ const retry=p.activityFromDSH({running:false,nodes:[{kind:'model-retry',retryState:'scheduled',seq:8,turn:2}]});assert.equal(retry.busy,true);assert.equal(retry.phase,'retrying');assert.equal(retry.turnId,'2');
+ const failure=p.activityFromDSH({running:false,promptError:{op:'send',error:{code:'UNAVAILABLE',message:'private transport detail'}}});assert.equal(failure.errorId,'prompt:send:UNAVAILABLE');assert.ok(!JSON.stringify(failure).includes('private'));
+ assert.equal(p.activityFromDSH({running:true,nodes:[{kind:'turn-error',seq:5}]}).errorId,undefined);
+});
