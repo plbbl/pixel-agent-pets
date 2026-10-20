@@ -29,3 +29,9 @@ test('DSH retry and transport failures follow official snapshots without copying
  const failure=p.activityFromDSH({running:false,promptError:{op:'send',error:{code:'UNAVAILABLE',message:'private transport detail'}}});assert.equal(failure.errorId,'prompt:send:UNAVAILABLE');assert.ok(!JSON.stringify(failure).includes('private'));
  assert.equal(p.activityFromDSH({running:true,nodes:[{kind:'turn-error',seq:5}]}).errorId,undefined);
 });
+test('DSH frozen interrupted outputs use the same terminal stop signal as the native adapter',()=>{
+ const old={kind:'assistant',interrupted:true,turn:4,seq:20,blocks:[{kind:'text',text:'private partial'}]};
+ const stopped=p.activityFromDSH({running:false,nodes:[old]});assert.equal(stopped.busy,false);assert.equal(stopped.phase,'stopping');assert.equal(stopped.turnId,'4');assert.ok(!JSON.stringify(stopped).includes('private'));
+ assert.notEqual(p.activityFromDSH({running:true,nodes:[old]}).phase,'stopping');
+ assert.notEqual(p.activityFromDSH({running:false,nodes:[{...old,interrupted:undefined}]}).phase,'stopping');
+});

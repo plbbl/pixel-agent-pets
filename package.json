@@ -17,13 +17,15 @@
     "dist",
     "assets",
     "codex",
+    "codex-pixel",
     "scripts",
     "src",
     "cordis.patch.yml",
     "README.md",
     "LICENSE",
     "NOTICE.md",
-    "native"
+    "native",
+    "assets-hd"
   ],
   "engines": {
     "node": ">=20"
@@ -38,7 +40,8 @@
     "check": "tsc --noEmit",
     "build:site": "node scripts/build-site.mjs",
     "build:desktop": "node scripts/build-desktop.mjs",
-    "build:media": "node scripts/build-media.mjs"
+    "build:media": "node scripts/build-media.mjs",
+    "build:codex-native": "node scripts/build-codex-native.mjs"
   },
   "dependencies": {
     "@electron/asar": "3.4.1",

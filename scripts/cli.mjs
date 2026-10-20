@@ -8,9 +8,9 @@ async function main(){
  if(command==='install'&&args.includes('--codex-full')){console.log(JSON.stringify(await installFullCompanion(root),null,2));return;}
  if(command==='uninstall'&&args.includes('--codex-full')){console.log(JSON.stringify(await uninstallFullCompanion(),null,2));return;}
  if(command==='install'){
-  const {buildAll}=await import('./build.mjs');await buildAll();
+  const {buildAll}=await import('./build.mjs');await buildAll({codexQuality:value('--quality')??'auto'});
   const specific=args.includes('--codex')||args.includes('--dsh'),result={};
-  if(args.includes('--codex')||!specific)result.codex=await installCodex(root,h.codex);
+  if(args.includes('--codex')||!specific)result.codex=await installCodex(root,h.codex,{qualityChoices:args.includes('--quality-choices')});
   if(args.includes('--dsh')||!specific&&await exists(path.join(profileDirectory(h.dsh,profile),'package.json')))result.dsh=await installDSH(root,h.dsh,profile);
   console.log(JSON.stringify(result,null,2));console.log('Codex: Settings → Mini & Pets (Mini 与虚拟宠物) → circular Refresh icon → select a pet. Older versions: Settings → Pets. DSH: reopen the selected profile.');return;
  }
@@ -25,6 +25,6 @@ async function main(){
   let dsh;try{const p=JSON.parse(await fs.readFile(path.join(profileDirectory(h.dsh,profile),'package.json'),'utf8'));dsh={profile,enabled:p.dsh?.profile?.bundles?.includes(packageName)??false,linked:!!p.dependencies?.[packageName]};}catch{dsh={profile,installed:false};}
   console.log(JSON.stringify({node:process.versions.node,codex,dsh},null,2));return;
  }
- console.log(`Pixel Agent Pets\n\nnode scripts/cli.mjs install [--codex-full] [--codex] [--dsh] [--profile web]\nnode scripts/cli.mjs uninstall --codex\nnode scripts/cli.mjs uninstall --dsh --profile web\nnode scripts/cli.mjs doctor [--profile web]\nnode scripts/cli.mjs import-clawd [--source path/to/app.asar]\n\nFour included pets. No API key or model request. No official app modification.`);
+ console.log(`Pixel Agent Pets\n\nnode scripts/cli.mjs install [--codex-full] [--codex] [--dsh] [--profile web] [--quality auto|pixel|hd] [--quality-choices]\nnode scripts/cli.mjs uninstall --codex\nnode scripts/cli.mjs uninstall --dsh --profile web\nnode scripts/cli.mjs doctor [--profile web]\nnode scripts/cli.mjs import-clawd [--source path/to/app.asar]\n\nFour included pets. No API key or model request. No official app modification.`);
 }
 main().catch(e=>{console.error(e.message);process.exitCode=1;});

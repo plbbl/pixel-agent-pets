@@ -1,18 +1,28 @@
 import {baseAction,captionAt,frameAt,idleActions,toolAction,type Activity,type Character,type Pack} from './policy';
-const CACHE_BYTES=10*1024*1024;
-/** Local, event-driven canvas player. It has no host commands or network client. */
+import {hdAssetURL,loadHDManifest,petResolution,petView,type HDManifest,type HDVariant,type PetView} from './pet-view';
+const CACHE_BYTES=24*1024*1024;
+type SourceSpec={key:string;url:string;width:number;height:number;columns:number;start:number;count:number;level:80|160|320;bytes:number};
+type Source=SourceSpec&{image:HTMLImageElement};
+type CacheEntry={image:HTMLImageElement;ready:Promise<HTMLImageElement>;bytes:number;cancel:()=>void};
+/** The display layer only: no CLI commands, model requests, or conversation text. */
 export class Player {
  private state:Activity={busy:false,phase:'thinking'};
  private action='';private since=0;private phaseSince=performance.now();private idleSince=performance.now();
  private idleIndex=0;private previewIndex=0;private toolIndex=0;private completeIndex=0;private tool='';
- private image:HTMLImageElement|null=null;private previous:HTMLCanvasElement|null=null;
- private transient=false;private hold=false;private resting=false;private frame=-1;private revision=0;private loading=false;private disposed=false;
+ private source:Source|null=null;private previous:HTMLCanvasElement|null=null;
+ private transient=false;private hold=false;private resting=false;private frame=-1;private revision=0;private viewRevision=0;private loading=false;private disposed=false;
  private timer:ReturnType<typeof setTimeout>|null=null;private raf:number|null=null;
- private cache=new Map<string,{image:HTMLImageElement,ready:Promise<HTMLImageElement>,bytes:number,cancel:()=>void}>();
+ private cache=new Map<string,CacheEntry>();private pendingSource='';private hd:HDManifest|null|undefined;private manifestPending=false;private failedHD=new Set<string>();
+ private view:PetView={size:80,quality:'80'};
  private media=matchMedia('(prefers-reduced-motion: reduce)');private lastSpecial=-Infinity;
- constructor(private canvas:HTMLCanvasElement,private character:Character,private pack:Pack,private caption:HTMLElement,private label:(title:string)=>void){
+ constructor(private canvas:HTMLCanvasElement,private character:Character,private pack:Pack,private caption:HTMLElement,private label:(title:string)=>void,private manifest:()=>Promise<HDManifest|null>=loadHDManifest,private assetURL:(character:string,action:string,file:string)=>string|null=hdAssetURL){
   document.addEventListener('visibilitychange',this.visibility);this.media.addEventListener('change',this.motion);
   this.tool=toolAction(character);this.base();
+ }
+ /** Scaling or changing detail never restarts an action or its authored clock. */
+ setView(value:PetView){
+  if(this.disposed)return;this.view=petView(value);++this.viewRevision;this.pendingSource='';
+  if(this.source)this.draw(this.currentFrame());this.ensureSource(this.currentFrame());
  }
  private stopClock(){if(this.timer!==null)clearTimeout(this.timer);if(this.raf!==null)cancelAnimationFrame(this.raf);this.timer=this.raf=null;}
  private family(s:Activity){return `${s.busy}:${s.awaitingInput}:${['thinking','preparing'].includes(s.phase)?'thinking':s.phase}`;}
@@ -22,7 +32,12 @@ export class Player {
   if(this.family(old)!==this.family(next))this.phaseSince=performance.now();
   if(next.toolId&&next.toolId!==old.toolId)this.tool=toolAction(this.character,next.tool,this.toolIndex++);
   if(!next.busy&&old.busy)this.idleSince=performance.now();
-  if(next.awaitingInput||next.phase==='stopping'&&next.busy){this.base(true);return;}
+  if(next.awaitingInput){this.base(true);return;}
+  if(next.phase==='stopping'){
+   if(next.busy)this.base(true);
+   else if(old.busy||old.phase!=='stopping')this.play(this.character==='clawd'?'Turning':this.character==='claude'?'stopped':'error',true);
+   return;
+  }
   if(next.errorId&&next.errorId!==old.errorId){this.play(this.character==='clawd'?'Facepalm':'error',true);return;}
   if(next.busy&&!old.busy){if(this.media.matches){this.base(true);return;}this.play(this.character==='clawd'?'Excited':this.character==='claude'?'sending':this.character==='gpt'?'wave':'fast',true);return;}
   if(!next.busy&&old.busy){const c=this.character,n=this.completeIndex++;this.play(c==='clawd'?['JumpingHappy','Confetti','DancingHappy','Spark'][n%4]:c==='gpt'?['happy','ready','idea'][n%3]:c==='deepseek'?['happy','riceHappy','dance'][n%3]:['happy','dance'][n%2],true);return;}
@@ -31,39 +46,87 @@ export class Player {
  }
  private desired(){return baseAction(this.character,this.state,performance.now()-this.phaseSince,this.tool);}
  private base(urgent=false){
-  if(this.disposed||document.hidden)return;
-  if(this.transient&&!urgent)return;
-  const busy=this.state.busy||this.state.awaitingInput;
-  this.play(this.desired(),false,!!busy,!busy);
+  if(this.disposed||document.hidden)return;if(this.transient&&!urgent)return;
+  const busy=this.state.busy||this.state.awaitingInput;this.play(this.desired(),false,!!busy,!busy);
  }
- private load(action:string){
-  const hit=this.cache.get(action);if(hit){this.cache.delete(action);this.cache.set(action,hit);return hit.ready;}
-  const a=this.pack.animations[action],image=new Image();image.decoding='async';let pending=true,cancel=()=>{};
+ private baseSpec(action:string):SourceSpec{
+  const a=this.pack.animations[action];return {key:action+':80',url:this.pack.urls[action],width:a.width,height:a.height,columns:a.columns,start:0,count:a.frames,level:80,bytes:a.width*a.height*a.columns*Math.ceil(a.frames/a.columns)*4};
+ }
+ private variant(level:160|320):HDVariant|undefined{
+  const a=this.pack.animations[this.action],v=this.hd?.characters[this.character]?.animations[this.action]?.[String(level) as '160'|'320'];
+  if(!v||v.height!==level||v.width!==a.width*level/80||v.frames!==a.frames||v.fps!==a.fps||v.columns!==4||v.chunkFrames!==16||!Array.isArray(v.files)||v.files.length!==Math.ceil(v.frames/v.chunkFrames))return;
+  return v;
+ }
+ private wantedSpec(frame:number):SourceSpec{
+  const target=petResolution(this.view,devicePixelRatio||1,this.character==='clawd');
+  for(const level of target===320?[320,160]as const:target===160?[160]as const:[]){
+   if(this.failedHD.has(this.action+':'+level))continue;const v=this.variant(level);if(!v)continue;
+   const chunk=Math.floor(frame/v.chunkFrames),file=v.files[chunk],url=typeof file==='string'?this.assetURL(this.character,this.action,file):null;if(!url)continue;
+   const start=chunk*v.chunkFrames,count=Math.min(v.chunkFrames,v.frames-start);
+   return {key:this.action+':'+level+':'+chunk,url,width:v.width,height:v.height,columns:v.columns,start,count,level,bytes:v.width*v.height*v.columns*Math.ceil(count/v.columns)*4};
+  }
+  return this.baseSpec(this.action);
+ }
+ private requestManifest(){
+  if(this.hd!==undefined||this.manifestPending||this.character==='clawd'||petResolution(this.view,devicePixelRatio||1)===80)return;
+  this.manifestPending=true;this.manifest().then(metadata=>{this.manifestPending=false;if(this.disposed)return;this.hd=metadata;this.ensureSource(this.currentFrame());}).catch(()=>{this.manifestPending=false;this.hd=null;});
+ }
+ private load(spec:SourceSpec){
+  const hit=this.cache.get(spec.key);if(hit){this.cache.delete(spec.key);this.cache.set(spec.key,hit);return hit.ready;}
+  const image=new Image();image.decoding='async';let pending=true,cancel=()=>{};
   const ready=new Promise<HTMLImageElement>((resolve,reject)=>{
-   const fail=()=>{if(this.cache.get(action)?.image===image)this.cache.delete(action);reject(Error('Pet image unavailable'));};
+   const fail=()=>{pending=false;if(this.cache.get(spec.key)?.image===image)this.cache.delete(spec.key);reject(Error('Pet image unavailable'));};
    cancel=()=>{if(pending){pending=false;image.onload=image.onerror=null;image.src='';reject(Error('Pet image superseded'));}};
    image.onload=()=>image.decode().then(()=>{pending=false;resolve(image);},fail);image.onerror=fail;
   });
-  this.cache.set(action,{image,ready,bytes:a.width*a.height*a.columns*Math.ceil(a.frames/a.columns)*4,cancel});
-  while(this.cache.size>2||[...this.cache.values()].reduce((n,a)=>n+a.bytes,0)>CACHE_BYTES){const key=this.cache.keys().next().value!;const entry=this.cache.get(key)!;this.cache.delete(key);entry.cancel();}
-  image.src=this.pack.urls[action];return ready;
+  this.cache.set(spec.key,{image,ready,bytes:spec.bytes,cancel});
+  while(this.cache.size>2||[...this.cache.values()].reduce((n,a)=>n+a.bytes,0)>CACHE_BYTES){
+   const key=[...this.cache.keys()].find(k=>k!==spec.key&&k!==this.source?.key);if(!key)break;
+   const entry=this.cache.get(key)!;this.cache.delete(key);entry.cancel();
+  }
+  image.src=spec.url;return ready;
+ }
+ private currentFrame(){
+  const a=this.pack.animations[this.action];if(!a)return 0;
+  return this.media.matches?a.poster:this.resting?0:frameAt(a,performance.now()-this.since,this.hold)??a.frames-1;
+ }
+ private ensureSource(frame:number){
+  if(this.disposed||document.hidden||!this.action||this.loading)return;
+  this.requestManifest();const spec=this.wantedSpec(frame);
+  if(this.source?.key===spec.key){this.prefetch(frame);return;}if(this.pendingSource===spec.key)return;
+  this.pendingSource=spec.key;const rev=this.revision,view=this.viewRevision;
+  this.load(spec).then(image=>{
+   if(this.disposed||document.hidden||rev!==this.revision||view!==this.viewRevision)return;
+   this.pendingSource='';const latest=this.currentFrame(),wanted=this.wantedSpec(latest);
+   if(wanted.key!==spec.key){this.ensureSource(latest);return;}
+   this.source={...spec,image};this.frame=-1;this.draw(latest);this.prefetch(latest);
+  }).catch(()=>{
+   if(this.disposed||rev!==this.revision||view!==this.viewRevision)return;
+   this.pendingSource='';if(spec.level!==80){this.failedHD.add(this.action+':'+spec.level);this.ensureSource(this.currentFrame());}
+  });
+ }
+ private prefetch(frame:number){
+  const current=this.source;if(!current||current.level===80||frame<current.start+current.count-5)return;
+  const nextFrame=current.start+current.count;if(nextFrame>=this.pack.animations[this.action].frames)return;
+  const spec=this.wantedSpec(nextFrame);if(spec.level!==current.level||spec.key===current.key)return;
+  void this.load(spec).catch(()=>{});
  }
  private play(action:string,transient:boolean,hold=false,rest=false){
-  if(!this.pack.animations[action]||this.disposed||document.hidden)return;
-  transient=transient&&!this.media.matches;
-  if(this.action===action&&this.transient===transient&&this.hold===hold&&this.resting===rest&&(this.image||this.loading))return;
-  this.stopClock();const revision=++this.revision;this.action=action;this.transient=transient;this.hold=hold;this.resting=rest;this.loading=true;this.image=null;this.frame=-1;
-  this.load(action).then(image=>{
+  if(!this.pack.animations[action]||this.disposed||document.hidden)return;transient=transient&&!this.media.matches;
+  if(this.action===action&&this.transient===transient&&this.hold===hold&&this.resting===rest&&(this.source||this.loading))return;
+  this.stopClock();const revision=++this.revision;this.action=action;this.transient=transient;this.hold=hold;this.resting=rest;this.loading=true;this.source=null;this.pendingSource='';this.frame=-1;
+  const spec=this.baseSpec(action);
+  this.load(spec).then(image=>{
    if(this.disposed||revision!==this.revision||document.hidden)return;
    this.previous=document.createElement('canvas');this.previous.width=this.canvas.width;this.previous.height=this.canvas.height;this.previous.getContext('2d')!.drawImage(this.canvas,0,0);
-   this.image=image;this.loading=false;this.since=performance.now();if(this.media.matches)this.previous=null;
-   this.draw(this.media.matches?this.pack.animations[action].poster:0);this.label(this.pack.animations[action].title);
+   this.source={...spec,image};this.loading=false;this.since=performance.now();if(this.media.matches)this.previous=null;
+   this.draw(this.currentFrame());this.label(this.pack.animations[action].title);this.ensureSource(this.currentFrame());
    if(!this.media.matches)this.schedule(50);
   }).catch(()=>{if(this.disposed||revision!==this.revision)return;this.loading=false;this.caption.textContent='';});
  }
  private schedule(ms:number){this.timer=setTimeout(()=>{this.timer=null;this.raf=requestAnimationFrame(this.tick);},ms);}
  private tick=()=>{
-  this.raf=null;if(this.disposed||document.hidden||this.media.matches||!this.image)return;
+  this.raf=null;if(this.disposed||document.hidden||this.media.matches||!this.source)return;
   const elapsed=performance.now()-this.since,a=this.pack.animations[this.action];
   if(this.resting){
    if(this.previous)this.draw(0);
@@ -73,21 +136,22 @@ export class Player {
   if(!this.transient&&this.desired()!==this.action){this.base();return;}
   if(this.transient&&this.state.busy&&['sending','fast','wave','Excited'].includes(this.action)&&elapsed>=900){this.transient=false;this.base();return;}
   const n=frameAt(a,elapsed,this.hold);if(n===null){this.transient=false;this.base();return;}
-  if(n!==this.frame||this.previous)this.draw(n);
+  this.ensureSource(n);if(n!==this.frame||this.previous)this.draw(n);
   this.caption.textContent=captionAt(this.character,this.action,elapsed,a);
   this.schedule(this.hold&&n===(a.sustain??a.frames-1)&&!this.previous?1000:Math.max(1,1000/a.fps-(elapsed%(1000/a.fps))));
  };
  private draw(frame:number){
-  if(!this.image)return;const a=this.pack.animations[this.action],c=this.canvas,w=a.width,h=a.height,ratio=Math.min(2,Math.max(1,Math.round(devicePixelRatio||1)));
-  const mix=Math.min(1,(performance.now()-this.since)/150);
-  if(c.width!==w*ratio||c.height!==h*ratio){c.width=w*ratio;c.height=h*ratio;}
-  c.style.width=w+'px';c.style.left=(40-w/2)+'px';const ctx=c.getContext('2d')!;ctx.setTransform(ratio,0,0,ratio,0,0);ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,w,h);
+  if(!this.source)return;const a=this.pack.animations[this.action],source=this.source;if(frame<source.start||frame>=source.start+source.count)return;
+  const c=this.canvas,scale=this.view.size/80,w=a.width*scale,h=a.height*scale,ratio=Math.min(2,Math.max(1,devicePixelRatio||1)),mix=Math.min(1,(performance.now()-this.since)/150);
+  const width=Math.round(w*ratio),height=Math.round(h*ratio);if(c.width!==width||c.height!==height){c.width=width;c.height=height;}
+  c.style.width=w+'px';c.style.height=h+'px';c.style.left=(this.view.size-w)/2+'px';
+  const ctx=c.getContext('2d')!;ctx.setTransform(ratio,0,0,ratio,0,0);ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,w,h);
   if(this.previous&&mix<1){const pw=this.previous.width/this.previous.height*h;ctx.globalAlpha=1-mix;ctx.drawImage(this.previous,0,0,this.previous.width,this.previous.height,(w-pw)/2,0,pw,h);ctx.globalCompositeOperation='lighter';}
-  ctx.globalAlpha=this.previous?mix:1;ctx.drawImage(this.image,frame%a.columns*w,Math.floor(frame/a.columns)*h,w,h,0,0,w,h);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';if(mix===1)this.previous=null;
-  c.dataset.character=this.character;c.dataset.action=this.action;c.dataset.frame=String(frame);this.frame=frame;this.caption.textContent=captionAt(this.character,this.action,performance.now()-this.since,a);
+  const local=frame-source.start;ctx.globalAlpha=this.previous?mix:1;ctx.drawImage(source.image,local%source.columns*source.width,Math.floor(local/source.columns)*source.height,source.width,source.height,0,0,w,h);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';if(mix===1)this.previous=null;
+  c.dataset.character=this.character;c.dataset.action=this.action;c.dataset.frame=String(frame);if(c.dataset.resolution!==String(source.level))c.dataset.resolution=String(source.level);this.frame=frame;this.caption.textContent=captionAt(this.character,this.action,performance.now()-this.since,a);
  }
- preview(){if(this.state.busy||this.state.awaitingInput)return;const choices=Object.keys(this.pack.animations);this.play(choices[this.previewIndex++%choices.length],true);}
- private visibility=()=>{if(document.hidden){this.stopClock();++this.revision;this.loading=false;this.image=null;this.previous=null;for(const a of this.cache.values())a.cancel();this.cache.clear();}else{this.transient=false;this.base();}};
- private motion=()=>{this.stopClock();this.image=null;this.loading=false;++this.revision;this.transient=false;this.base();};
- dispose(){this.disposed=true;++this.revision;this.stopClock();document.removeEventListener('visibilitychange',this.visibility);this.media.removeEventListener('change',this.motion);for(const a of this.cache.values())a.cancel();this.cache.clear();this.image=null;this.previous=null;}
+ preview(action?:string){if(this.state.busy||this.state.awaitingInput)return;const choices=Object.keys(this.pack.animations);const selected=action&&this.pack.animations[action]?action:choices[this.previewIndex++%choices.length];this.play(selected,true);}
+ private visibility=()=>{if(document.hidden){this.stopClock();++this.revision;this.loading=false;this.source=null;this.previous=null;this.pendingSource='';for(const a of this.cache.values())a.cancel();this.cache.clear();}else{this.transient=false;this.base();}};
+ private motion=()=>{this.stopClock();this.source=null;this.loading=false;++this.revision;this.transient=false;this.base();};
+ dispose(){this.disposed=true;++this.revision;++this.viewRevision;this.stopClock();document.removeEventListener('visibilitychange',this.visibility);this.media.removeEventListener('change',this.motion);for(const a of this.cache.values())a.cancel();this.cache.clear();this.source=null;this.previous=null;}
 }

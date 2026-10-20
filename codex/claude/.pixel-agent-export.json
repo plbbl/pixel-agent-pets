@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "requestedQuality": "auto",
+  "resolvedQuality": "hd",
+  "sourceResolutions": {
+    "idle": 320,
+    "sending": 320,
+    "happy": 320,
+    "error": 320,
+    "pointing": 320,
+    "thinking": 320
+  },
+  "layout": {
+    "width": 1536,
+    "height": 1872,
+    "cellWidth": 192,
+    "cellHeight": 208,
+    "states": 9,
+    "frames": 57
+  }
+}

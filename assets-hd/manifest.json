@@ -1,0 +1,1397 @@
+{
+  "version": 1,
+  "processingVersion": 2,
+  "characters": {
+    "claude": {
+      "animations": {
+        "idle": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "claude/idle/160-0.png",
+              "claude/idle/160-1.png",
+              "claude/idle/160-2.png",
+              "claude/idle/160-3.png",
+              "claude/idle/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "claude/idle/320-0.png",
+              "claude/idle/320-1.png",
+              "claude/idle/320-2.png",
+              "claude/idle/320-3.png",
+              "claude/idle/320-4.png"
+            ]
+          }
+        },
+        "typing": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "claude/typing/160-0.png",
+              "claude/typing/160-1.png",
+              "claude/typing/160-2.png",
+              "claude/typing/160-3.png",
+              "claude/typing/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "claude/typing/320-0.png",
+              "claude/typing/320-1.png",
+              "claude/typing/320-2.png",
+              "claude/typing/320-3.png",
+              "claude/typing/320-4.png"
+            ]
+          }
+        },
+        "reading": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "claude/reading/160-0.png",
+              "claude/reading/160-1.png",
+              "claude/reading/160-2.png",
+              "claude/reading/160-3.png",
+              "claude/reading/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "claude/reading/320-0.png",
+              "claude/reading/320-1.png",
+              "claude/reading/320-2.png",
+              "claude/reading/320-3.png",
+              "claude/reading/320-4.png"
+            ]
+          }
+        },
+        "happy": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "claude/happy/160-0.png",
+              "claude/happy/160-1.png",
+              "claude/happy/160-2.png",
+              "claude/happy/160-3.png",
+              "claude/happy/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "claude/happy/320-0.png",
+              "claude/happy/320-1.png",
+              "claude/happy/320-2.png",
+              "claude/happy/320-3.png",
+              "claude/happy/320-4.png"
+            ]
+          }
+        },
+        "sending": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "claude/sending/160-0.png",
+              "claude/sending/160-1.png",
+              "claude/sending/160-2.png",
+              "claude/sending/160-3.png",
+              "claude/sending/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "claude/sending/320-0.png",
+              "claude/sending/320-1.png",
+              "claude/sending/320-2.png",
+              "claude/sending/320-3.png",
+              "claude/sending/320-4.png"
+            ]
+          }
+        },
+        "pointing": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "claude/pointing/160-0.png",
+              "claude/pointing/160-1.png",
+              "claude/pointing/160-2.png",
+              "claude/pointing/160-3.png",
+              "claude/pointing/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "claude/pointing/320-0.png",
+              "claude/pointing/320-1.png",
+              "claude/pointing/320-2.png",
+              "claude/pointing/320-3.png",
+              "claude/pointing/320-4.png"
+            ]
+          }
+        },
+        "error": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "claude/error/160-0.png",
+              "claude/error/160-1.png",
+              "claude/error/160-2.png",
+              "claude/error/160-3.png",
+              "claude/error/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "claude/error/320-0.png",
+              "claude/error/320-1.png",
+              "claude/error/320-2.png",
+              "claude/error/320-3.png",
+              "claude/error/320-4.png"
+            ]
+          }
+        },
+        "stopped": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "claude/stopped/160-0.png",
+              "claude/stopped/160-1.png",
+              "claude/stopped/160-2.png",
+              "claude/stopped/160-3.png",
+              "claude/stopped/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "claude/stopped/320-0.png",
+              "claude/stopped/320-1.png",
+              "claude/stopped/320-2.png",
+              "claude/stopped/320-3.png",
+              "claude/stopped/320-4.png"
+            ]
+          }
+        },
+        "dance": {
+          "160": {
+            "width": 176,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 160,
+            "fps": 20,
+            "files": [
+              "claude/dance/160-0.png",
+              "claude/dance/160-1.png",
+              "claude/dance/160-2.png",
+              "claude/dance/160-3.png",
+              "claude/dance/160-4.png",
+              "claude/dance/160-5.png",
+              "claude/dance/160-6.png",
+              "claude/dance/160-7.png",
+              "claude/dance/160-8.png",
+              "claude/dance/160-9.png"
+            ]
+          },
+          "320": {
+            "width": 352,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 160,
+            "fps": 20,
+            "files": [
+              "claude/dance/320-0.png",
+              "claude/dance/320-1.png",
+              "claude/dance/320-2.png",
+              "claude/dance/320-3.png",
+              "claude/dance/320-4.png",
+              "claude/dance/320-5.png",
+              "claude/dance/320-6.png",
+              "claude/dance/320-7.png",
+              "claude/dance/320-8.png",
+              "claude/dance/320-9.png"
+            ]
+          }
+        },
+        "thinking": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "claude/thinking/160-0.png",
+              "claude/thinking/160-1.png",
+              "claude/thinking/160-2.png",
+              "claude/thinking/160-3.png",
+              "claude/thinking/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "claude/thinking/320-0.png",
+              "claude/thinking/320-1.png",
+              "claude/thinking/320-2.png",
+              "claude/thinking/320-3.png",
+              "claude/thinking/320-4.png"
+            ]
+          }
+        },
+        "confused": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "claude/confused/160-0.png",
+              "claude/confused/160-1.png",
+              "claude/confused/160-2.png",
+              "claude/confused/160-3.png",
+              "claude/confused/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "claude/confused/320-0.png",
+              "claude/confused/320-1.png",
+              "claude/confused/320-2.png",
+              "claude/confused/320-3.png",
+              "claude/confused/320-4.png"
+            ]
+          }
+        },
+        "special": {
+          "160": {
+            "width": 256,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 195,
+            "fps": 20,
+            "files": [
+              "claude/special/160-0.png",
+              "claude/special/160-1.png",
+              "claude/special/160-2.png",
+              "claude/special/160-3.png",
+              "claude/special/160-4.png",
+              "claude/special/160-5.png",
+              "claude/special/160-6.png",
+              "claude/special/160-7.png",
+              "claude/special/160-8.png",
+              "claude/special/160-9.png",
+              "claude/special/160-10.png",
+              "claude/special/160-11.png",
+              "claude/special/160-12.png"
+            ]
+          },
+          "320": {
+            "width": 512,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 195,
+            "fps": 20,
+            "files": [
+              "claude/special/320-0.png",
+              "claude/special/320-1.png",
+              "claude/special/320-2.png",
+              "claude/special/320-3.png",
+              "claude/special/320-4.png",
+              "claude/special/320-5.png",
+              "claude/special/320-6.png",
+              "claude/special/320-7.png",
+              "claude/special/320-8.png",
+              "claude/special/320-9.png",
+              "claude/special/320-10.png",
+              "claude/special/320-11.png",
+              "claude/special/320-12.png"
+            ]
+          }
+        }
+      }
+    },
+    "deepseek": {
+      "animations": {
+        "idle": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/idle/160-0.png",
+              "deepseek/idle/160-1.png",
+              "deepseek/idle/160-2.png",
+              "deepseek/idle/160-3.png",
+              "deepseek/idle/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/idle/320-0.png",
+              "deepseek/idle/320-1.png",
+              "deepseek/idle/320-2.png",
+              "deepseek/idle/320-3.png",
+              "deepseek/idle/320-4.png"
+            ]
+          }
+        },
+        "thinking": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/thinking/160-0.png",
+              "deepseek/thinking/160-1.png",
+              "deepseek/thinking/160-2.png",
+              "deepseek/thinking/160-3.png",
+              "deepseek/thinking/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/thinking/320-0.png",
+              "deepseek/thinking/320-1.png",
+              "deepseek/thinking/320-2.png",
+              "deepseek/thinking/320-3.png",
+              "deepseek/thinking/320-4.png"
+            ]
+          }
+        },
+        "typing": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/typing/160-0.png",
+              "deepseek/typing/160-1.png",
+              "deepseek/typing/160-2.png",
+              "deepseek/typing/160-3.png",
+              "deepseek/typing/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/typing/320-0.png",
+              "deepseek/typing/320-1.png",
+              "deepseek/typing/320-2.png",
+              "deepseek/typing/320-3.png",
+              "deepseek/typing/320-4.png"
+            ]
+          }
+        },
+        "fast": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 52,
+            "fps": 20,
+            "files": [
+              "deepseek/fast/160-0.png",
+              "deepseek/fast/160-1.png",
+              "deepseek/fast/160-2.png",
+              "deepseek/fast/160-3.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 52,
+            "fps": 20,
+            "files": [
+              "deepseek/fast/320-0.png",
+              "deepseek/fast/320-1.png",
+              "deepseek/fast/320-2.png",
+              "deepseek/fast/320-3.png"
+            ]
+          }
+        },
+        "happy": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/happy/160-0.png",
+              "deepseek/happy/160-1.png",
+              "deepseek/happy/160-2.png",
+              "deepseek/happy/160-3.png",
+              "deepseek/happy/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/happy/320-0.png",
+              "deepseek/happy/320-1.png",
+              "deepseek/happy/320-2.png",
+              "deepseek/happy/320-3.png",
+              "deepseek/happy/320-4.png"
+            ]
+          }
+        },
+        "error": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/error/160-0.png",
+              "deepseek/error/160-1.png",
+              "deepseek/error/160-2.png",
+              "deepseek/error/160-3.png",
+              "deepseek/error/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/error/320-0.png",
+              "deepseek/error/320-1.png",
+              "deepseek/error/320-2.png",
+              "deepseek/error/320-3.png",
+              "deepseek/error/320-4.png"
+            ]
+          }
+        },
+        "hungry": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/hungry/160-0.png",
+              "deepseek/hungry/160-1.png",
+              "deepseek/hungry/160-2.png",
+              "deepseek/hungry/160-3.png",
+              "deepseek/hungry/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/hungry/320-0.png",
+              "deepseek/hungry/320-1.png",
+              "deepseek/hungry/320-2.png",
+              "deepseek/hungry/320-3.png",
+              "deepseek/hungry/320-4.png"
+            ]
+          }
+        },
+        "rice": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/rice/160-0.png",
+              "deepseek/rice/160-1.png",
+              "deepseek/rice/160-2.png",
+              "deepseek/rice/160-3.png",
+              "deepseek/rice/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/rice/320-0.png",
+              "deepseek/rice/320-1.png",
+              "deepseek/rice/320-2.png",
+              "deepseek/rice/320-3.png",
+              "deepseek/rice/320-4.png"
+            ]
+          }
+        },
+        "riceHappy": {
+          "160": {
+            "width": 256,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/riceHappy/160-0.png",
+              "deepseek/riceHappy/160-1.png",
+              "deepseek/riceHappy/160-2.png",
+              "deepseek/riceHappy/160-3.png",
+              "deepseek/riceHappy/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 512,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/riceHappy/320-0.png",
+              "deepseek/riceHappy/320-1.png",
+              "deepseek/riceHappy/320-2.png",
+              "deepseek/riceHappy/320-3.png",
+              "deepseek/riceHappy/320-4.png"
+            ]
+          }
+        },
+        "empty": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/empty/160-0.png",
+              "deepseek/empty/160-1.png",
+              "deepseek/empty/160-2.png",
+              "deepseek/empty/160-3.png",
+              "deepseek/empty/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/empty/320-0.png",
+              "deepseek/empty/320-1.png",
+              "deepseek/empty/320-2.png",
+              "deepseek/empty/320-3.png",
+              "deepseek/empty/320-4.png"
+            ]
+          }
+        },
+        "steal": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/steal/160-0.png",
+              "deepseek/steal/160-1.png",
+              "deepseek/steal/160-2.png",
+              "deepseek/steal/160-3.png",
+              "deepseek/steal/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/steal/320-0.png",
+              "deepseek/steal/320-1.png",
+              "deepseek/steal/320-2.png",
+              "deepseek/steal/320-3.png",
+              "deepseek/steal/320-4.png"
+            ]
+          }
+        },
+        "pile": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/pile/160-0.png",
+              "deepseek/pile/160-1.png",
+              "deepseek/pile/160-2.png",
+              "deepseek/pile/160-3.png",
+              "deepseek/pile/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/pile/320-0.png",
+              "deepseek/pile/320-1.png",
+              "deepseek/pile/320-2.png",
+              "deepseek/pile/320-3.png",
+              "deepseek/pile/320-4.png"
+            ]
+          }
+        },
+        "sleep": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/sleep/160-0.png",
+              "deepseek/sleep/160-1.png",
+              "deepseek/sleep/160-2.png",
+              "deepseek/sleep/160-3.png",
+              "deepseek/sleep/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "deepseek/sleep/320-0.png",
+              "deepseek/sleep/320-1.png",
+              "deepseek/sleep/320-2.png",
+              "deepseek/sleep/320-3.png",
+              "deepseek/sleep/320-4.png"
+            ]
+          }
+        },
+        "chain": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 160,
+            "fps": 20,
+            "files": [
+              "deepseek/chain/160-0.png",
+              "deepseek/chain/160-1.png",
+              "deepseek/chain/160-2.png",
+              "deepseek/chain/160-3.png",
+              "deepseek/chain/160-4.png",
+              "deepseek/chain/160-5.png",
+              "deepseek/chain/160-6.png",
+              "deepseek/chain/160-7.png",
+              "deepseek/chain/160-8.png",
+              "deepseek/chain/160-9.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 160,
+            "fps": 20,
+            "files": [
+              "deepseek/chain/320-0.png",
+              "deepseek/chain/320-1.png",
+              "deepseek/chain/320-2.png",
+              "deepseek/chain/320-3.png",
+              "deepseek/chain/320-4.png",
+              "deepseek/chain/320-5.png",
+              "deepseek/chain/320-6.png",
+              "deepseek/chain/320-7.png",
+              "deepseek/chain/320-8.png",
+              "deepseek/chain/320-9.png"
+            ]
+          }
+        },
+        "dance": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 200,
+            "fps": 20,
+            "files": [
+              "deepseek/dance/160-0.png",
+              "deepseek/dance/160-1.png",
+              "deepseek/dance/160-2.png",
+              "deepseek/dance/160-3.png",
+              "deepseek/dance/160-4.png",
+              "deepseek/dance/160-5.png",
+              "deepseek/dance/160-6.png",
+              "deepseek/dance/160-7.png",
+              "deepseek/dance/160-8.png",
+              "deepseek/dance/160-9.png",
+              "deepseek/dance/160-10.png",
+              "deepseek/dance/160-11.png",
+              "deepseek/dance/160-12.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 200,
+            "fps": 20,
+            "files": [
+              "deepseek/dance/320-0.png",
+              "deepseek/dance/320-1.png",
+              "deepseek/dance/320-2.png",
+              "deepseek/dance/320-3.png",
+              "deepseek/dance/320-4.png",
+              "deepseek/dance/320-5.png",
+              "deepseek/dance/320-6.png",
+              "deepseek/dance/320-7.png",
+              "deepseek/dance/320-8.png",
+              "deepseek/dance/320-9.png",
+              "deepseek/dance/320-10.png",
+              "deepseek/dance/320-11.png",
+              "deepseek/dance/320-12.png"
+            ]
+          }
+        }
+      }
+    },
+    "gpt": {
+      "animations": {
+        "idle": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/idle/160-0.png",
+              "gpt/idle/160-1.png",
+              "gpt/idle/160-2.png",
+              "gpt/idle/160-3.png",
+              "gpt/idle/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/idle/320-0.png",
+              "gpt/idle/320-1.png",
+              "gpt/idle/320-2.png",
+              "gpt/idle/320-3.png",
+              "gpt/idle/320-4.png"
+            ]
+          }
+        },
+        "thinking": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/thinking/160-0.png",
+              "gpt/thinking/160-1.png",
+              "gpt/thinking/160-2.png",
+              "gpt/thinking/160-3.png",
+              "gpt/thinking/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/thinking/320-0.png",
+              "gpt/thinking/320-1.png",
+              "gpt/thinking/320-2.png",
+              "gpt/thinking/320-3.png",
+              "gpt/thinking/320-4.png"
+            ]
+          }
+        },
+        "typing": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/typing/160-0.png",
+              "gpt/typing/160-1.png",
+              "gpt/typing/160-2.png",
+              "gpt/typing/160-3.png",
+              "gpt/typing/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/typing/320-0.png",
+              "gpt/typing/320-1.png",
+              "gpt/typing/320-2.png",
+              "gpt/typing/320-3.png",
+              "gpt/typing/320-4.png"
+            ]
+          }
+        },
+        "idea": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/idea/160-0.png",
+              "gpt/idea/160-1.png",
+              "gpt/idea/160-2.png",
+              "gpt/idea/160-3.png",
+              "gpt/idea/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/idea/320-0.png",
+              "gpt/idea/320-1.png",
+              "gpt/idea/320-2.png",
+              "gpt/idea/320-3.png",
+              "gpt/idea/320-4.png"
+            ]
+          }
+        },
+        "happy": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/happy/160-0.png",
+              "gpt/happy/160-1.png",
+              "gpt/happy/160-2.png",
+              "gpt/happy/160-3.png",
+              "gpt/happy/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/happy/320-0.png",
+              "gpt/happy/320-1.png",
+              "gpt/happy/320-2.png",
+              "gpt/happy/320-3.png",
+              "gpt/happy/320-4.png"
+            ]
+          }
+        },
+        "error": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/error/160-0.png",
+              "gpt/error/160-1.png",
+              "gpt/error/160-2.png",
+              "gpt/error/160-3.png",
+              "gpt/error/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/error/320-0.png",
+              "gpt/error/320-1.png",
+              "gpt/error/320-2.png",
+              "gpt/error/320-3.png",
+              "gpt/error/320-4.png"
+            ]
+          }
+        },
+        "wave": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/wave/160-0.png",
+              "gpt/wave/160-1.png",
+              "gpt/wave/160-2.png",
+              "gpt/wave/160-3.png",
+              "gpt/wave/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/wave/320-0.png",
+              "gpt/wave/320-1.png",
+              "gpt/wave/320-2.png",
+              "gpt/wave/320-3.png",
+              "gpt/wave/320-4.png"
+            ]
+          }
+        },
+        "probe": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 200,
+            "fps": 20,
+            "files": [
+              "gpt/probe/160-0.png",
+              "gpt/probe/160-1.png",
+              "gpt/probe/160-2.png",
+              "gpt/probe/160-3.png",
+              "gpt/probe/160-4.png",
+              "gpt/probe/160-5.png",
+              "gpt/probe/160-6.png",
+              "gpt/probe/160-7.png",
+              "gpt/probe/160-8.png",
+              "gpt/probe/160-9.png",
+              "gpt/probe/160-10.png",
+              "gpt/probe/160-11.png",
+              "gpt/probe/160-12.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 200,
+            "fps": 20,
+            "files": [
+              "gpt/probe/320-0.png",
+              "gpt/probe/320-1.png",
+              "gpt/probe/320-2.png",
+              "gpt/probe/320-3.png",
+              "gpt/probe/320-4.png",
+              "gpt/probe/320-5.png",
+              "gpt/probe/320-6.png",
+              "gpt/probe/320-7.png",
+              "gpt/probe/320-8.png",
+              "gpt/probe/320-9.png",
+              "gpt/probe/320-10.png",
+              "gpt/probe/320-11.png",
+              "gpt/probe/320-12.png"
+            ]
+          }
+        },
+        "snapshot": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/snapshot/160-0.png",
+              "gpt/snapshot/160-1.png",
+              "gpt/snapshot/160-2.png",
+              "gpt/snapshot/160-3.png",
+              "gpt/snapshot/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/snapshot/320-0.png",
+              "gpt/snapshot/320-1.png",
+              "gpt/snapshot/320-2.png",
+              "gpt/snapshot/320-3.png",
+              "gpt/snapshot/320-4.png"
+            ]
+          }
+        },
+        "gate": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/gate/160-0.png",
+              "gpt/gate/160-1.png",
+              "gpt/gate/160-2.png",
+              "gpt/gate/160-3.png",
+              "gpt/gate/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/gate/320-0.png",
+              "gpt/gate/320-1.png",
+              "gpt/gate/320-2.png",
+              "gpt/gate/320-3.png",
+              "gpt/gate/320-4.png"
+            ]
+          }
+        },
+        "smoke": {
+          "160": {
+            "width": 192,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/smoke/160-0.png",
+              "gpt/smoke/160-1.png",
+              "gpt/smoke/160-2.png",
+              "gpt/smoke/160-3.png",
+              "gpt/smoke/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 384,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/smoke/320-0.png",
+              "gpt/smoke/320-1.png",
+              "gpt/smoke/320-2.png",
+              "gpt/smoke/320-3.png",
+              "gpt/smoke/320-4.png"
+            ]
+          }
+        },
+        "matrix": {
+          "160": {
+            "width": 208,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/matrix/160-0.png",
+              "gpt/matrix/160-1.png",
+              "gpt/matrix/160-2.png",
+              "gpt/matrix/160-3.png",
+              "gpt/matrix/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 416,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/matrix/320-0.png",
+              "gpt/matrix/320-1.png",
+              "gpt/matrix/320-2.png",
+              "gpt/matrix/320-3.png",
+              "gpt/matrix/320-4.png"
+            ]
+          }
+        },
+        "ready": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/ready/160-0.png",
+              "gpt/ready/160-1.png",
+              "gpt/ready/160-2.png",
+              "gpt/ready/160-3.png",
+              "gpt/ready/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/ready/320-0.png",
+              "gpt/ready/320-1.png",
+              "gpt/ready/320-2.png",
+              "gpt/ready/320-3.png",
+              "gpt/ready/320-4.png"
+            ]
+          }
+        },
+        "sleep": {
+          "160": {
+            "width": 160,
+            "height": 160,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/sleep/160-0.png",
+              "gpt/sleep/160-1.png",
+              "gpt/sleep/160-2.png",
+              "gpt/sleep/160-3.png",
+              "gpt/sleep/160-4.png"
+            ]
+          },
+          "320": {
+            "width": 320,
+            "height": 320,
+            "columns": 4,
+            "chunkFrames": 16,
+            "frames": 80,
+            "fps": 20,
+            "files": [
+              "gpt/sleep/320-0.png",
+              "gpt/sleep/320-1.png",
+              "gpt/sleep/320-2.png",
+              "gpt/sleep/320-3.png",
+              "gpt/sleep/320-4.png"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "paletteColors": 256
+}

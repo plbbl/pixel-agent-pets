@@ -4,12 +4,14 @@ export const characterIDs=['claude','gpt','deepseek','clawd'];
 const stamp=()=>new Date().toISOString().replace(/[:.]/g,'-');
 export async function exists(p){try{await fs.access(p);return true;}catch{return false;}}
 export function profileDirectory(home,profile){if(!/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/.test(profile))throw Error('Invalid DSH profile name');return path.join(home,'profiles',profile);}
-export async function installCodex(repo,codexHome){
+export async function installCodex(repo,codexHome,{qualityChoices=false}={}){
  const {version}=JSON.parse(await fs.readFile(path.join(repo,'package.json'),'utf8'));
  const pets=path.join(codexHome,'pets'),backup=path.join(codexHome,'pixel-agent-pets-backups',stamp());await fs.mkdir(pets,{recursive:true});const installed=[];
- for(const c of characterIDs){
-  const source=path.join(repo,'codex',c);if(!await exists(source))continue;
-  const id='pixel-agent-'+c,target=path.join(pets,id),marker=path.join(target,'.pixel-agent-pets.json');
+ const entries=characterIDs.map(c=>({c,id:'pixel-agent-'+c,folder:'codex'}));
+ if(qualityChoices)for(const c of characterIDs.filter(c=>c!=='clawd'))entries.push({c,id:'pixel-agent-'+c+'-pixel',folder:'codex-pixel'});
+ for(const {c,id,folder} of entries){
+  const source=path.join(repo,folder,c);if(!await exists(source))continue;
+  const target=path.join(pets,id),marker=path.join(target,'.pixel-agent-pets.json');
   if(await exists(target)){
    let owned;try{owned=JSON.parse(await fs.readFile(marker,'utf8'));}catch{}
    if(owned?.package!==packageName)throw Error(`Refusing to overwrite another pet: ${target}`);
@@ -23,7 +25,8 @@ export async function installCodex(repo,codexHome){
 }
 export async function uninstallCodex(codexHome){
  const moved=[],backup=path.join(codexHome,'pixel-agent-pets-backups','uninstalled-'+stamp());
- for(const c of characterIDs){const id='pixel-agent-'+c,target=path.join(codexHome,'pets',id);if(!await exists(target))continue;let owned;try{owned=JSON.parse(await fs.readFile(path.join(target,'.pixel-agent-pets.json'),'utf8'));}catch{}if(owned?.package!==packageName)continue;await fs.mkdir(backup,{recursive:true});await fs.rename(target,path.join(backup,id));moved.push(id);}
+ const ids=[...characterIDs.map(c=>'pixel-agent-'+c),...characterIDs.filter(c=>c!=='clawd').map(c=>'pixel-agent-'+c+'-pixel')];
+ for(const id of ids){const target=path.join(codexHome,'pets',id);if(!await exists(target))continue;let owned;try{owned=JSON.parse(await fs.readFile(path.join(target,'.pixel-agent-pets.json'),'utf8'));}catch{}if(owned?.package!==packageName)continue;await fs.mkdir(backup,{recursive:true});await fs.rename(target,path.join(backup,id));moved.push(id);}
  return {moved,backup};
 }
 export async function installDSH(repo,dshHome,profile,{run=spawnSync}={}){

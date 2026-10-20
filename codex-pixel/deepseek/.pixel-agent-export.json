@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "requestedQuality": "pixel",
+  "resolvedQuality": "pixel",
+  "sourceResolutions": {
+    "idle": 80,
+    "steal": 80,
+    "happy": 80,
+    "error": 80,
+    "hungry": 80,
+    "chain": 80,
+    "riceHappy": 80
+  },
+  "layout": {
+    "width": 1536,
+    "height": 1872,
+    "cellWidth": 192,
+    "cellHeight": 208,
+    "states": 9,
+    "frames": 57
+  }
+}

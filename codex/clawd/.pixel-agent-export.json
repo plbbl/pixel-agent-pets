@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "requestedQuality": "auto",
+  "resolvedQuality": "original",
+  "sourceResolutions": {
+    "LookingAroundEyesOnly": 80,
+    "Running": 80,
+    "Waving": 80,
+    "JumpingHappy": 80,
+    "Facepalm": 80,
+    "Pointing": 80,
+    "Thinking": 80,
+    "Confetti": 80
+  },
+  "layout": {
+    "width": 1536,
+    "height": 1872,
+    "cellWidth": 192,
+    "cellHeight": 208,
+    "states": 9,
+    "frames": 57
+  }
+}

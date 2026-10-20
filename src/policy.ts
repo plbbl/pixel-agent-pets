@@ -41,7 +41,8 @@ export function activityFromDSH(s:any):Activity{
  const pending=(s.pending??[]).some((p:any)=>!['resolved','cancelled','done'].includes(p.status));
  const lastNode=(s.nodes??s.chat?.legacy?.nodes)?.at(-1),failed=lastNode&&/error|failure/.test(lastNode.kind??lastNode.type??'');
  const retry=lastNode?.kind==='model-retry'&&lastNode.retryState==='scheduled';
+ const stopped=!s.running&&lastNode?.kind==='assistant'&&lastNode.interrupted===true;
  const turn=tool?.turn??partial?.turn??lastNode?.turn;
  const errorId=s.running?undefined:failed?String(lastNode.id??lastNode.key??lastNode.seq??'failure'):s.promptError?'prompt:'+s.promptError.op+':'+(s.promptError.error?.code??'error'):s.openError?'open-error':s.lastAgentError?'agent-error':undefined;
- return {busy:!!s.running||retry,phase:tool?'tools':retry?'retrying':last?.kind==='text'?'responding':'thinking',awaitingInput:pending,tool:tool?.name,toolId:tool?.callId,turnId:turn==null?undefined:String(turn),errorId};
+ return {busy:!!s.running||retry,phase:tool?'tools':retry?'retrying':stopped?'stopping':last?.kind==='text'?'responding':'thinking',awaitingInput:pending,tool:tool?.name,toolId:tool?.callId,turnId:turn==null?undefined:String(turn),errorId};
 }

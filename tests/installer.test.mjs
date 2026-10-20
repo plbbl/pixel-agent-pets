@@ -8,6 +8,17 @@ test('Codex installation is idempotent, backs up old versions, and preserves unr
 test('installer refuses unrelated collisions and traversal profile names',async t=>{
  const home=await fs.mkdtemp(path.join(os.tmpdir(),'pixel-pets-collision-'));t.after(()=>fs.rm(home,{recursive:true,force:true}));await fs.mkdir(path.join(home,'pets','pixel-agent-claude'),{recursive:true});await assert.rejects(installCodex(process.cwd(),home),/another pet/);for(const name of ['../web','/tmp','x/y','','web;touch'])assert.throws(()=>profileDirectory(home,name));
 });
+test('native quality choices stay in the original pet catalog and uninstall only owned variants',async t=>{
+ const home=await fs.mkdtemp(path.join(os.tmpdir(),'pixel-pets-qualities-'));t.after(()=>fs.rm(home,{recursive:true,force:true}));
+ const installed=await installCodex(process.cwd(),home,{qualityChoices:true});assert.equal(installed.length,7);
+ for(const c of ['claude','gpt','deepseek']){
+  const high=JSON.parse(await fs.readFile(path.join(home,'pets','pixel-agent-'+c,'.pixel-agent-export.json')));
+  const low=JSON.parse(await fs.readFile(path.join(home,'pets','pixel-agent-'+c+'-pixel','.pixel-agent-export.json')));
+  assert.equal(high.resolvedQuality,'hd');assert.equal(low.resolvedQuality,'pixel');
+  assert.equal(high.layout.frames,low.layout.frames);
+ }
+ assert.equal((await uninstallCodex(home)).moved.length,7);
+});
 test('DSH installer uses the official CLI and only appends its own dependency and bundle',async t=>{
  const home=await fs.mkdtemp(path.join(os.tmpdir(),'pixel-dsh-'));t.after(()=>fs.rm(home,{recursive:true,force:true}));const dir=profileDirectory(home,'web');await fs.mkdir(dir,{recursive:true});
  const original={name:'user-profile',private:true,dependencies:{original:'1'},dsh:{profile:{bundles:['official-base','official-web']}}};const file=path.join(dir,'package.json');await fs.writeFile(file,JSON.stringify(original));await fs.writeFile(path.join(dir,'cordis.patch.yml'),'user-owned-policy');
