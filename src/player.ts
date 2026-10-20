@@ -24,7 +24,7 @@ export class Player {
   if(!next.busy&&old.busy)this.idleSince=performance.now();
   if(next.awaitingInput||next.phase==='stopping'&&next.busy){this.base(true);return;}
   if(next.errorId&&next.errorId!==old.errorId){this.play(this.character==='clawd'?'Facepalm':'error',true);return;}
-  if(next.busy&&!old.busy){this.play(this.character==='clawd'?'Excited':this.character==='claude'?'sending':this.character==='gpt'?'wave':'fast',true);return;}
+  if(next.busy&&!old.busy){if(this.media.matches){this.base(true);return;}this.play(this.character==='clawd'?'Excited':this.character==='claude'?'sending':this.character==='gpt'?'wave':'fast',true);return;}
   if(!next.busy&&old.busy){const c=this.character,n=this.completeIndex++;this.play(c==='clawd'?['JumpingHappy','Confetti','DancingHappy','Spark'][n%4]:c==='gpt'?['happy','ready','idea'][n%3]:c==='deepseek'?['happy','riceHappy','dance'][n%3]:['happy','dance'][n%2],true);return;}
   if(this.character==='claude'&&next.chineseDraft&&!old.chineseDraft&&!next.busy&&performance.now()-this.lastSpecial>20000){this.lastSpecial=performance.now();this.play('special',true);return;}
   if(!this.transient&&this.desired()!==this.action)this.base();
@@ -50,6 +50,7 @@ export class Player {
  }
  private play(action:string,transient:boolean,hold=false,rest=false){
   if(!this.pack.animations[action]||this.disposed||document.hidden)return;
+  transient=transient&&!this.media.matches;
   if(this.action===action&&this.transient===transient&&this.hold===hold&&this.resting===rest&&(this.image||this.loading))return;
   this.stopClock();const revision=++this.revision;this.action=action;this.transient=transient;this.hold=hold;this.resting=rest;this.loading=true;this.image=null;this.frame=-1;
   this.load(action).then(image=>{

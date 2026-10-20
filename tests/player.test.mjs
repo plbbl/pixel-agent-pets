@@ -5,12 +5,12 @@ import fs from 'node:fs/promises';
 import {build} from 'esbuild';
 const compiled=await build({entryPoints:['src/player.ts'],bundle:true,format:'cjs',write:false,platform:'browser'});
 const pack=JSON.parse(await fs.readFile('assets/gpt/manifest.json','utf8'));
-function harness(){
+function harness(reduced=false){
  let now=0,id=0;const tasks=new Map(),listeners=new Map(),images=[];let draws=0;
  const context={setTransform(){},clearRect(){},drawImage(){draws++;}};
  const canvas=()=>({width:80,height:80,style:{},dataset:{},getContext:()=>context});
  const doc={hidden:false,createElement:canvas,addEventListener:(k,v)=>listeners.set(k,v),removeEventListener:k=>listeners.delete(k)};
- const media={matches:false,addEventListener(){},removeEventListener(){}};
+ const media={matches:reduced,addEventListener(){},removeEventListener(){}};
  class Image{constructor(){images.push(this);}set src(v){this.url=v;}get src(){return this.url;}decode(){return Promise.resolve();}}
  const sandbox={module:{exports:{}},exports:{},performance:{now:()=>now},document:doc,Image,matchMedia:()=>media,devicePixelRatio:2,
   setTimeout:(fn,ms)=>{tasks.set(++id,{at:now+ms,fn});return id;},clearTimeout:i=>tasks.delete(i),
@@ -29,4 +29,7 @@ test('hidden views stop drawing, discard old work, and resume the latest state',
 });
 test('a work action plays forward then holds without repeatedly repainting or shifting its root',async()=>{
  const h=harness();await h.ready();h.p.update({busy:true,phase:'tools',awaitingInput:true});await h.ready();h.advance(30000);const frame=h.c.dataset.frame,left=h.c.style.left,before=h.draws();h.advance(10000);assert.equal(h.c.dataset.frame,frame);assert.equal(h.c.style.left,left);assert.equal(h.draws(),before);h.p.dispose();
+});
+test('reduced motion uses static poses but still follows work-state changes',async()=>{
+ const h=harness(true);await h.ready();h.p.update({busy:true,phase:'thinking'});await h.ready();assert.equal(h.c.dataset.action,'thinking');assert.equal(h.tasks.size,0);h.p.update({busy:true,phase:'responding'});await h.ready();assert.equal(h.c.dataset.action,'typing');assert.equal(h.tasks.size,0);h.p.dispose();
 });

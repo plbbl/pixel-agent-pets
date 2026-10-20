@@ -8,5 +8,5 @@ if ! command -v node >/dev/null || ! command -v npm >/dev/null; then
 fi
 npm ci --no-audit --no-fund
 node scripts/cli.mjs install --codex
-echo "Open Codex / ChatGPT Settings → Pets → Refresh."
+echo "Open Settings → Mini & Pets (Mini 与虚拟宠物) → the circular Refresh icon → select a pet."
 read -r answer

@@ -5,6 +5,7 @@ const stamp=()=>new Date().toISOString().replace(/[:.]/g,'-');
 export async function exists(p){try{await fs.access(p);return true;}catch{return false;}}
 export function profileDirectory(home,profile){if(!/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/.test(profile))throw Error('Invalid DSH profile name');return path.join(home,'profiles',profile);}
 export async function installCodex(repo,codexHome){
+ const {version}=JSON.parse(await fs.readFile(path.join(repo,'package.json'),'utf8'));
  const pets=path.join(codexHome,'pets'),backup=path.join(codexHome,'pixel-agent-pets-backups',stamp());await fs.mkdir(pets,{recursive:true});const installed=[];
  for(const c of characterIDs){
   const source=path.join(repo,'codex',c);if(!await exists(source))continue;
@@ -15,7 +16,7 @@ export async function installCodex(repo,codexHome){
    await fs.mkdir(backup,{recursive:true});await fs.rename(target,path.join(backup,id));
   }
   const stage=path.join(pets,'.'+id+'.tmp-'+process.pid);if(await exists(stage))throw Error('An unfinished installation exists: '+stage);
-  try{await fs.cp(source,stage,{recursive:true});await fs.writeFile(path.join(stage,'.pixel-agent-pets.json'),JSON.stringify({package:packageName,version:'0.1.0'}));await fs.rename(stage,target);}catch(e){if(await exists(path.join(backup,id))&&!await exists(target))await fs.rename(path.join(backup,id),target);throw e;}
+  try{await fs.cp(source,stage,{recursive:true});await fs.writeFile(path.join(stage,'.pixel-agent-pets.json'),JSON.stringify({package:packageName,version}));await fs.rename(stage,target);}catch(e){if(await exists(path.join(backup,id))&&!await exists(target))await fs.rename(path.join(backup,id),target);throw e;}
   installed.push({id:'custom:'+id,path:target});
  }
  return installed;
