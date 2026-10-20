@@ -21,6 +21,7 @@ jobs:
         run: node -e 'const version=require("./package.json").version;if(process.env.RELEASE_TAG!==`v${version}`)throw Error("Release tag must match package.json version")'
       - run: npm ci
       - run: npm run build
+      - run: npm run build:site
       - run: npm run check
       - run: npm test
       - run: npm run build:installer
