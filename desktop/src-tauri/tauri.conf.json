@@ -51,7 +51,8 @@
     "shortDescription": "四只本地像素桌宠",
     "longDescription": "Claude、GPT、DeepSeek 与原版 Clawd 的完整本地动作库。",
     "macOS": {
-      "minimumSystemVersion": "11.0"
+      "minimumSystemVersion": "11.0",
+      "signingIdentity": "-"
     },
     "windows": {
       "nsis": {

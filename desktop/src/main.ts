@@ -7,6 +7,7 @@ import {localAssets} from './assets';
 import {call, commands, native, type NativePreferences, type PetCommand} from './native';
 import {characters, geometry, preferences, qualities, readPreferences, savePreferences, type Preferences} from './preferences';
 import {Sequence} from './sequence';
+import {whenVisible} from './visibility';
 
 const stage = document.querySelector<HTMLElement>('#stage')!;
 const actor = document.querySelector<HTMLButtonElement>('#actor')!;
@@ -23,6 +24,7 @@ let readinessRAF: number | undefined, unlisten: (() => void) | undefined;
 let drag: {x: number; y: number; started: boolean} | undefined, suppressClickUntil = 0;
 let started = false;
 const startupCommands: PetCommand[] = [];
+let visibilityWait = new AbortController();
 
 function report(error: unknown) {
   const message = error instanceof Error ? error.message : 'Local operation failed';
@@ -114,19 +116,21 @@ function makePlayer() {
     updateCaption(); firstPaint();
   }, assets.hd, assets.hdURL, {frameLocked: true, onComplete: action => sequence?.completed(action)});
   player.setView(prefs);
+  player.preview(currentCharacter === 'clawd' ? 'LookingAroundEyesOnly' : 'idle');
 }
 
 async function setCharacter(character: Character) {
   const revision = ++loading;
   try {
     const next = await assets.pack(character);
+    if (visible) await whenVisible({signal: visibilityWait.signal});
     if (disposed || revision !== loading) return;
     resetSequence(); player?.dispose(); player = undefined;
     prefs = preferences({...prefs, character}); pack = next; interaction = 0;
     actor.setAttribute('aria-label', names[character] + '，单击互动，双击完整演出，右键设置');
     fit(); makePlayer(); sync();
   } catch (error) {
-    if (disposed || revision !== loading) return;
+    if (disposed || revision !== loading || error instanceof Error && error.name === 'AbortError') return;
     caption.dataset.error = 'true'; caption.textContent = '资源未载入，右键重选角色';
     report(error);
   }
@@ -155,12 +159,16 @@ function interact() {
   playAction(options[interaction++ % options.length]);
 }
 
-function setVisible(next: boolean) {
+async function setVisible(next: boolean) {
   if (visible === next) return;
   visible = next; stage.hidden = !visible;
   closeMenu(); resetSequence();
-  if (!visible) { player?.dispose(); player = undefined; }
-  else makePlayer();
+  if (!visible) { visibilityWait.abort(); player?.dispose(); player = undefined; }
+  else {
+    visibilityWait = new AbortController();
+    try { await whenVisible({signal: visibilityWait.signal}); if (!disposed && visible) makePlayer(); }
+    catch (error) { if (!(error instanceof Error && error.name === 'AbortError')) report(error); }
+  }
 }
 
 async function command(message: PetCommand) {
@@ -170,7 +178,7 @@ async function command(message: PetCommand) {
   else if (message.type === 'quality' && qualities.includes(message.value as Preferences['quality'])) setView({quality: message.value as Preferences['quality']});
   else if (message.type === 'action' && typeof message.value === 'string') message.value === 'all' ? showStory(true) : playAction(message.value);
   else if (message.type === 'showcase') showStory(message.value === 'all');
-  else if (message.type === 'visible' && typeof message.value === 'boolean') setVisible(message.value);
+  else if (message.type === 'visible' && typeof message.value === 'boolean') await setVisible(message.value);
 }
 
 function closeMenu() { menu.hidden = true; menu.replaceChildren(); }
@@ -247,6 +255,7 @@ reducedMotion.addEventListener('change', resetSequence);
 
 addEventListener('pagehide', () => {
   disposed = true; ++loading; resetSequence(); player?.dispose(); unlisten?.(); drawing.disconnect(); captions.disconnect();
+  visibilityWait.abort();
   dpr.removeEventListener('change', pixelRatioChanged);
   reducedMotion.removeEventListener('change', resetSequence);
   if (clickTimer !== undefined) clearTimeout(clickTimer);

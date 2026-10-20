@@ -6,7 +6,7 @@ import {build} from 'esbuild';
 
 async function exportsOf(file) {
   const output = await build({entryPoints: [file], bundle: true, format: 'cjs', platform: 'browser', write: false});
-  const sandbox = {module: {exports: {}}, URL};
+  const sandbox = {module: {exports: {}}, URL, setTimeout, clearTimeout};
   sandbox.exports = sandbox.module.exports;
   vm.runInNewContext(output.outputFiles[0].text, sandbox);
   return sandbox.module.exports;
@@ -15,6 +15,7 @@ const {Sequence} = await exportsOf('desktop/src/sequence.ts');
 const {preferences, geometry, readPreferences, savePreferences} = await exportsOf('desktop/src/preferences.ts');
 const {localAssets} = await exportsOf('desktop/src/assets.ts');
 const {signatureStory, storyTimeline} = await exportsOf('src/stories.ts');
+const {whenVisible} = await exportsOf('desktop/src/visibility.ts');
 const sharedPlayer = (await build({entryPoints: ['src/player.ts'], bundle: true, format: 'cjs', platform: 'browser', write: false})).outputFiles[0].text;
 const roles = ['claude', 'gpt', 'deepseek', 'clawd'];
 const packs = Object.fromEntries(await Promise.all(roles.map(async role => [role, JSON.parse(await fs.readFile(`assets/${role}/manifest.json`, 'utf8'))])));
@@ -166,4 +167,37 @@ test('size reserves wide props and upper captions while preferences tolerate blo
     assert.equal(bounds.baseline, 42 + size * 67 / 80);
     assert.ok(bounds.height > 42 + size);
   }
+});
+
+function visibilityHarness(hidden = true) {
+  let id = 0;
+  const listeners = new Set(), frames = new Map();
+  const doc = {hidden, addEventListener(_name, fn) { listeners.add(fn); }, removeEventListener(_name, fn) { listeners.delete(fn); }};
+  return {doc, listeners, frames,
+    frame(fn) { frames.set(++id, fn); return id; }, cancel(id) { frames.delete(id); },
+    visibility(value) { doc.hidden = value; for (const fn of listeners) fn(); },
+    paint() { for (const [id, fn] of [...frames]) { frames.delete(id); fn(0); } },
+  };
+}
+
+test('native show visibility settles before playback, including a late duplicate visibility event', async () => {
+  const h = visibilityHarness(), pending = whenVisible(h);
+  let ready = false; void pending.then(() => { ready = true; });
+  assert.equal(h.frames.size, 0);
+  h.doc.hidden = false; assert.equal(h.frames.size, 0, 'a property change alone has not delivered the event');
+  h.visibility(false); h.paint(); await Promise.resolve(); assert.equal(ready, false);
+  h.visibility(false); // A queued native event restarts the two-frame quiet period.
+  h.paint(); await Promise.resolve(); assert.equal(ready, false);
+  h.paint(); await pending; assert.equal(ready, true); assert.equal(h.listeners.size, 0); assert.equal(h.frames.size, 0);
+});
+
+test('hiding or aborting a native show cancels pending rendering work without resolving visibility', async () => {
+  const h = visibilityHarness(false), controller = new AbortController();
+  const pending = whenVisible({...h, signal: controller.signal});
+  h.paint(); h.visibility(true); assert.equal(h.frames.size, 0);
+  controller.abort(); await assert.rejects(pending, error => error.name === 'AbortError');
+  assert.equal(h.listeners.size, 0); assert.equal(h.frames.size, 0);
+  const blocked = visibilityHarness(true);
+  await assert.rejects(whenVisible({...blocked, timeout: 1}), /did not become visible/);
+  assert.equal(blocked.listeners.size, 0);
 });

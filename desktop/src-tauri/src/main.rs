@@ -462,6 +462,7 @@ fn main() {
             if let Some((position,monitor))=placement {let area=monitor.work_area();let position=model::clamp_position(position,area.position.x,area.position.y,area.position.x+area.size.width as i32,area.position.y+area.size.height as i32,(width*monitor.scale_factor()) as i32,(height*monitor.scale_factor()) as i32);window.set_position(tauri::PhysicalPosition::new(position.x,position.y))?;}
             let icon=app.default_window_icon().ok_or("Missing pet tray icon")?.clone();
             TrayIconBuilder::with_id("pet-tray").tooltip("抱抱龙桌宠 · 右键切换角色与动作").icon(icon).menu(&native_menu(app.handle())?).show_menu_on_left_click(true).build(app)?;
+            if preferences.visible || smoke.is_some() { window.show()?; }
             cursor_passthrough(app.handle().clone());
             if let Some(report)=smoke.clone() {let handle=app.handle().clone();std::thread::spawn(move ||{std::thread::sleep(Duration::from_secs(60));let state=handle.state::<PetState>();if !state.drawn.load(Ordering::SeqCst){let _=write_report(&report,json!({"ok":false,"frontendReady":state.ready.load(Ordering::SeqCst),"frameDrawn":false,"reason":"frontend draw timeout","checks":state.smoke_progress.lock().ok().map(|v|v.clone()),"platform":std::env::consts::OS}));handle.exit(1);}});}
             Ok(())

@@ -5,7 +5,7 @@ import {spawnSync} from 'node:child_process';
 import {build} from 'esbuild';
 const desktop=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),root=path.dirname(desktop);
 export async function prepareDesktop(){
- const output=path.join(desktop,'dist');await fs.mkdir(output,{recursive:true});
+ const output=path.join(desktop,'dist');await fs.rm(output,{recursive:true,force:true});await fs.mkdir(output,{recursive:true});
  const characters=[];let animations=0;
  for(const id of ['claude','gpt','deepseek','clawd']){
   const manifest=JSON.parse(await fs.readFile(path.join(root,'assets',id,'manifest.json'),'utf8'));
