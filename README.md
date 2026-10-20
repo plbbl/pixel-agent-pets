@@ -25,13 +25,17 @@
 
 展示页默认根据显示大小与屏幕像素密度自动选择清晰度，也可以分别手动调整**清晰度**与**显示大小**，挑选动作、暂停、拖动进度、重播。高清与清晰模式使用真实 320px／160px 动作图集；轻量模式使用桌面宠物图集。Clawd 保持原版像素。GitHub README 不运行交互脚本，上面的入口会直接打开对应清晰度的展示页，进去后仍可随时切换。
 
-<table>
-<tr>
-<td align="center" width="33%"><a href="https://plbbl.github.io/pixel-agent-pets/?pet=claude&amp;quality=720&amp;size=320#theater"><img src="docs/media/claude.gif" width="280" alt="Claude 高清完整中文彩蛋"></a><br><strong>Claude · 中文彩蛋</strong><br><sub>中文？→中国人？→白眼→封禁印章</sub></td>
-<td align="center" width="33%"><a href="https://plbbl.github.io/pixel-agent-pets/?pet=gpt&amp;quality=720&amp;size=320#theater"><img src="docs/media/gpt.gif" width="280" alt="GPT 高清完整探针门禁冒烟验收矩阵到开工"></a><br><strong>GPT · 开工之前</strong><br><sub>探针→门禁→冒烟→验收矩阵→开工</sub></td>
-<td align="center" width="33%"><a href="https://plbbl.github.io/pixel-agent-pets/?pet=deepseek&amp;quality=720&amp;size=320#theater"><img src="docs/media/deepseek.gif" width="280" alt="DeepSeek 高清完整没饭讨饭吃饭偷饭晕碳演出"></a><br><strong>DeepSeek · 大米饭宇宙</strong><br><sub>没饭→讨饭→吃饭→偷饭→晕碳ing</sub></td>
-</tr>
-</table>
+### Claude · 完整中文彩蛋
+
+<p align="center"><a href="https://plbbl.github.io/pixel-agent-pets/?pet=claude&amp;quality=720&amp;size=300#theater"><img src="docs/media/claude.gif" height="340" alt="Claude 高清完整中文彩蛋"></a><br><sub>中文？→中国人？→白眼→封禁印章 · 195 帧，9.75 秒</sub></p>
+
+### GPT · 流程走完，终于开工
+
+<p align="center"><a href="https://plbbl.github.io/pixel-agent-pets/?pet=gpt&amp;quality=720&amp;size=300#theater"><img src="docs/media/gpt.gif" height="340" alt="GPT 高清完整探针门禁冒烟验收矩阵到开工"></a><br><sub>探针→门禁→冒烟→验收矩阵→开工 · 520 帧，26 秒</sub></p>
+
+### DeepSeek · 大米饭宇宙
+
+<p align="center"><a href="https://plbbl.github.io/pixel-agent-pets/?pet=deepseek&amp;quality=720&amp;size=300#theater"><img src="docs/media/deepseek.gif" height="340" alt="DeepSeek 高清完整没饭讨饭吃饭偷饭晕碳演出"></a><br><sub>没饭→讨饭→吃饭→偷饭→晕碳ing · 400 帧，20 秒</sub></p>
 
 <p align="center"><img src="docs/media/clawd.gif" width="120" alt="原版 Clawd"><br><sub>另有原版 Clawd · 25 套经典像素动作</sub></p>
 

@@ -90,7 +90,8 @@ test('the actual shared Player and desktop sequencer paint every signature frame
     sandbox.exports = sandbox.module.exports; vm.runInNewContext(sharedPlayer, sandbox);
     const pack = {...packs[role], urls: Object.fromEntries(Object.keys(packs[role].animations).map(a => [a, a]))};
     let sequence, completed = 0;
-    const player = new sandbox.module.exports.Player(canvas, role, pack, {textContent: ''}, () => sequence?.drawn(canvas.dataset.action), async () => null);
+    const player = new sandbox.module.exports.Player(canvas, role, pack, {textContent: ''}, () => sequence?.drawn(canvas.dataset.action, true), async () => null, undefined,
+      {frameLocked: true, onComplete: action => sequence?.completed(action)});
     sequence = new Sequence(pack, action => player.preview(action), () => ++completed, time);
     async function decode() {
       for (let i = 0; i < 6; i++) {

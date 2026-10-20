@@ -25,16 +25,24 @@ export class Sequence {
     return true;
   }
   /** Called by Player's label callback after the action's first actual draw. */
-  drawn(action: string): void {
+  drawn(action: string, waitForCompletion = false): void {
     if (!this.running || !this.waiting || this.step?.action !== action) return;
     this.waiting = false;
+    if (waitForCompletion) return;
     const a: Animation = this.pack.animations[action], revision = this.generation;
     this.timer = this.clock.setTimeout(() => {
       this.timer = undefined;
       if (revision !== this.generation || !this.running) return;
-      if (++this.index < this.steps.length) this.next();
-      else { this.cancel(); this.done(); }
+      this.completed(action);
     }, a.frames / a.fps * 1000);
+  }
+  /** Desktop frame-locked Player calls this only after painting the final frame. */
+  completed(action: string): void {
+    if (!this.running || this.waiting || this.step?.action !== action) return;
+    if (this.timer !== undefined) this.clock.clearTimeout(this.timer);
+    this.timer = undefined;
+    if (++this.index < this.steps.length) this.next();
+    else { this.cancel(); this.done(); }
   }
   cancel(): void {
     ++this.generation;

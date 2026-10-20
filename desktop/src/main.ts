@@ -25,7 +25,9 @@ let started = false;
 const startupCommands: PetCommand[] = [];
 
 function report(error: unknown) {
-  console.error('抱抱龙桌宠:', error instanceof Error ? error.message : 'Local operation failed');
+  const message = error instanceof Error ? error.message : 'Local operation failed';
+  console.error('抱抱龙桌宠:', message);
+  void call('frontend_error', {message}).catch(() => {});
 }
 
 function sync() {
@@ -108,9 +110,9 @@ function makePlayer() {
     if (currentCharacter !== prefs.character || disposed) return;
     caption.removeAttribute('data-error');
     canvas.setAttribute('aria-label', names[currentCharacter] + ' · ' + title);
-    sequence?.drawn(canvas.dataset.action ?? '');
+    sequence?.drawn(canvas.dataset.action ?? '', !matchMedia('(prefers-reduced-motion: reduce)').matches);
     updateCaption(); firstPaint();
-  }, assets.hd, assets.hdURL);
+  }, assets.hd, assets.hdURL, {frameLocked: true, onComplete: action => sequence?.completed(action)});
   player.setView(prefs);
 }
 
@@ -240,10 +242,13 @@ addEventListener('resize', () => { player?.setView(prefs); });
 let dpr = matchMedia(`(resolution: ${devicePixelRatio}dppx)`);
 function pixelRatioChanged() { dpr.removeEventListener('change', pixelRatioChanged); player?.setView(prefs); dpr = matchMedia(`(resolution: ${devicePixelRatio}dppx)`); dpr.addEventListener('change', pixelRatioChanged); }
 dpr.addEventListener('change', pixelRatioChanged);
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+reducedMotion.addEventListener('change', resetSequence);
 
 addEventListener('pagehide', () => {
   disposed = true; ++loading; resetSequence(); player?.dispose(); unlisten?.(); drawing.disconnect(); captions.disconnect();
   dpr.removeEventListener('change', pixelRatioChanged);
+  reducedMotion.removeEventListener('change', resetSequence);
   if (clickTimer !== undefined) clearTimeout(clickTimer);
   if (readinessRAF !== undefined) cancelAnimationFrame(readinessRAF);
 }, {once: true});
@@ -272,7 +277,10 @@ async function smokeCheck() {
       playAction(character === 'clawd' ? 'LookingAroundEyesOnly' : 'idle');
       const expected = petResolution(prefs, devicePixelRatio, character === 'clawd');
       const result = await new Promise<{action: string; drawnPixels: number}>((resolve, reject) => {
-        const deadline = setTimeout(() => { observer.disconnect(); reject(Error(`No real ${character}/${quality} draw`)); }, 15000);
+        const deadline = setTimeout(() => {
+          observer.disconnect();
+          reject(Error(`No real ${character}/${quality} draw; hidden=${document.hidden}; action=${canvas.dataset.action}; frame=${canvas.dataset.frame}; resolution=${canvas.dataset.resolution}; expected=${expected}`));
+        }, 15000);
         const inspect = () => {
           if (canvas.dataset.character !== character || Number(canvas.dataset.resolution) !== expected) return;
           const a = pack?.animations[canvas.dataset.action ?? ''];
@@ -286,7 +294,9 @@ async function smokeCheck() {
         observer.observe(canvas, {attributes: true, attributeFilter: ['data-frame', 'data-action', 'data-resolution']});
         inspect();
       });
-      checks.push({character, quality, resolution: expected, ...result});
+      const check = {character, quality, resolution: expected, ...result};
+      checks.push(check);
+      await call('smoke_progress', {check});
     }
   }
   stage.dataset.ready = 'true';

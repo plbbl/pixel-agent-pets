@@ -4,6 +4,8 @@ const CACHE_BYTES=24*1024*1024;
 type SourceSpec={key:string;url:string;width:number;height:number;columns:number;start:number;count:number;level:80|160|320;bytes:number};
 type Source=SourceSpec&{image:HTMLImageElement};
 type CacheEntry={image:HTMLImageElement;ready:Promise<HTMLImageElement>;bytes:number;cancel:()=>void};
+/** Optional local desktop playback. DSH keeps its real-time activity clock. */
+export type PlayerOptions={frameLocked?:boolean;onComplete?:(action:string)=>void};
 /** The display layer only: no CLI commands, model requests, or conversation text. */
 export class Player {
  private state:Activity={busy:false,phase:'thinking'};
@@ -14,8 +16,9 @@ export class Player {
  private timer:ReturnType<typeof setTimeout>|null=null;private raf:number|null=null;
  private cache=new Map<string,CacheEntry>();private pendingSource='';private hd:HDManifest|null|undefined;private manifestPending=false;private failedHD=new Set<string>();
  private view:PetView={size:80,quality:'80'};
+ private frozenElapsed:number|null=null;private paintedFrame=-1;private paintedAt=0;
  private media=matchMedia('(prefers-reduced-motion: reduce)');private lastSpecial=-Infinity;
- constructor(private canvas:HTMLCanvasElement,private character:Character,private pack:Pack,private caption:HTMLElement,private label:(title:string)=>void,private manifest:()=>Promise<HDManifest|null>=loadHDManifest,private assetURL:(character:string,action:string,file:string)=>string|null=hdAssetURL){
+ constructor(private canvas:HTMLCanvasElement,private character:Character,private pack:Pack,private caption:HTMLElement,private label:(title:string)=>void,private manifest:()=>Promise<HDManifest|null>=loadHDManifest,private assetURL:(character:string,action:string,file:string)=>string|null=hdAssetURL,private options:PlayerOptions={}){
   document.addEventListener('visibilitychange',this.visibility);this.media.addEventListener('change',this.motion);
   this.tool=toolAction(character);this.base();
  }
@@ -25,6 +28,16 @@ export class Player {
   if(this.source)this.draw(this.currentFrame());this.ensureSource(this.currentFrame());
  }
  private stopClock(){if(this.timer!==null)clearTimeout(this.timer);if(this.raf!==null)cancelAnimationFrame(this.raf);this.timer=this.raf=null;}
+ private elapsed(){return this.frozenElapsed??performance.now()-this.since;}
+ private lockedFrame(frame:number){
+  if(!this.options.frameLocked||this.hold||this.resting||this.media.matches)return frame;
+  const next=Math.min(this.pack.animations[this.action].frames-1,this.paintedFrame+1);
+  if(frame<=next)return frame;
+  const elapsed=next*1000/this.pack.animations[this.action].fps;
+  if(this.frozenElapsed!==null)this.frozenElapsed=elapsed;else this.since=performance.now()-elapsed;
+  return next;
+ }
+ private freeze(frame:number){if(this.frozenElapsed===null)this.frozenElapsed=frame*1000/this.pack.animations[this.action].fps;this.stopClock();}
  private family(s:Activity){return `${s.busy}:${s.awaitingInput}:${['thinking','preparing'].includes(s.phase)?'thinking':s.phase}`;}
  update(next:Activity){
   if(this.disposed)return;
@@ -91,7 +104,7 @@ export class Player {
  }
  private currentFrame(){
   const a=this.pack.animations[this.action];if(!a)return 0;
-  return this.media.matches?a.poster:this.resting?0:frameAt(a,performance.now()-this.since,this.hold)??a.frames-1;
+  return this.media.matches?a.poster:this.resting?0:this.lockedFrame(frameAt(a,this.elapsed(),this.hold)??a.frames-1);
  }
  private ensureSource(frame:number){
   if(this.disposed||document.hidden||!this.action||this.loading)return;
@@ -102,7 +115,10 @@ export class Player {
    if(this.disposed||document.hidden||rev!==this.revision||view!==this.viewRevision)return;
    this.pendingSource='';const latest=this.currentFrame(),wanted=this.wantedSpec(latest);
    if(wanted.key!==spec.key){this.ensureSource(latest);return;}
+   const resume=this.frozenElapsed!==null;
+   if(resume){this.since=performance.now()-this.frozenElapsed!;this.frozenElapsed=null;}
    this.source={...spec,image};this.frame=-1;this.draw(latest);this.prefetch(latest);
+   if(resume&&!this.media.matches)this.schedule(1000/this.pack.animations[this.action].fps);
   }).catch(()=>{
    if(this.disposed||rev!==this.revision||view!==this.viewRevision)return;
    this.pendingSource='';if(spec.level!==80){this.failedHD.add(this.action+':'+spec.level);this.ensureSource(this.currentFrame());}
@@ -117,7 +133,7 @@ export class Player {
  private play(action:string,transient:boolean,hold=false,rest=false){
   if(!this.pack.animations[action]||this.disposed||document.hidden)return;transient=transient&&!this.media.matches;
   if(this.action===action&&this.transient===transient&&this.hold===hold&&this.resting===rest&&(this.source||this.loading))return;
-  this.stopClock();const revision=++this.revision;this.action=action;this.transient=transient;this.hold=hold;this.resting=rest;this.loading=true;this.source=null;this.pendingSource='';this.frame=-1;
+  this.stopClock();const revision=++this.revision;this.action=action;this.transient=transient;this.hold=hold;this.resting=rest;this.loading=true;this.source=null;this.pendingSource='';this.frame=-1;this.paintedFrame=-1;this.frozenElapsed=null;
   const spec=this.baseSpec(action);
   this.load(spec).then(image=>{
    if(this.disposed||revision!==this.revision||document.hidden)return;
@@ -130,7 +146,7 @@ export class Player {
  private schedule(ms:number){this.timer=setTimeout(()=>{this.timer=null;this.raf=requestAnimationFrame(this.tick);},ms);}
  private tick=()=>{
   this.raf=null;if(this.disposed||document.hidden||this.media.matches||!this.source)return;
-  const elapsed=performance.now()-this.since,a=this.pack.animations[this.action];
+  let elapsed=this.elapsed();const a=this.pack.animations[this.action];
   if(this.resting){
    if(this.previous)this.draw(0);
    if(elapsed>=15000){const choices=idleActions[this.character],choice=choices[this.idleIndex++%choices.length];if(choice==='sleep'&&performance.now()-this.idleSince<90000){this.since=performance.now();this.schedule(15000);return;}this.play(choice,true,choice==='sleep');return;}
@@ -138,8 +154,16 @@ export class Player {
   }
   if(!this.transient&&this.desired()!==this.action){this.base();return;}
   if(this.transient&&this.state.busy&&['sending','fast','wave','Excited'].includes(this.action)&&elapsed>=900){this.transient=false;this.base();return;}
-  const n=frameAt(a,elapsed,this.hold);if(n===null){this.transient=false;this.base();return;}
-  this.ensureSource(n);if(n!==this.frame||this.previous)this.draw(n);
+  const nominal=frameAt(a,elapsed,this.hold);
+  if(nominal===null&&(!this.options.frameLocked||this.paintedFrame===a.frames-1)){
+   if(this.options.frameLocked){const remaining=1000/a.fps-(performance.now()-this.paintedAt);if(remaining>0){this.schedule(Math.max(1,remaining));return;}}
+   const revision=this.revision,action=this.action,complete=this.transient;this.transient=false;
+   if(complete)this.options.onComplete?.(action);
+   if(revision===this.revision)this.base();return;
+  }
+  const n=this.lockedFrame(nominal??a.frames-1);this.ensureSource(n);
+  if(this.options.frameLocked&&(n<this.source.start||n>=this.source.start+this.source.count)){this.freeze(n);return;}
+  if(n!==this.frame||this.previous)this.draw(n);elapsed=this.elapsed();
   this.caption.textContent=captionAt(this.character,this.action,elapsed,a);
   this.schedule(this.hold&&n===(a.sustain??a.frames-1)&&!this.previous?1000:Math.max(1,1000/a.fps-(elapsed%(1000/a.fps))));
  };
@@ -151,7 +175,7 @@ export class Player {
   const ctx=c.getContext('2d')!;ctx.setTransform(ratio,0,0,ratio,0,0);ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,w,h);
   if(this.previous&&mix<1){const pw=this.previous.width/this.previous.height*h;ctx.globalAlpha=1-mix;ctx.drawImage(this.previous,0,0,this.previous.width,this.previous.height,(w-pw)/2,0,pw,h);ctx.globalCompositeOperation='lighter';}
   const local=frame-source.start;ctx.globalAlpha=this.previous?mix:1;ctx.drawImage(source.image,local%source.columns*source.width,Math.floor(local/source.columns)*source.height,source.width,source.height,0,0,w,h);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';if(mix===1)this.previous=null;
-  c.dataset.character=this.character;c.dataset.action=this.action;c.dataset.frame=String(frame);if(c.dataset.resolution!==String(source.level))c.dataset.resolution=String(source.level);this.frame=frame;this.caption.textContent=captionAt(this.character,this.action,performance.now()-this.since,a);
+  c.dataset.character=this.character;c.dataset.action=this.action;c.dataset.frame=String(frame);if(c.dataset.resolution!==String(source.level))c.dataset.resolution=String(source.level);this.frame=frame;if(frame>this.paintedFrame)this.paintedAt=performance.now();this.paintedFrame=Math.max(this.paintedFrame,frame);this.caption.textContent=captionAt(this.character,this.action,this.elapsed(),a);
  }
  preview(action?:string){if(this.state.busy||this.state.awaitingInput)return;const choices=Object.keys(this.pack.animations);const selected=action&&this.pack.animations[action]?action:choices[this.previewIndex++%choices.length];this.play(selected,true);}
  private visibility=()=>{if(document.hidden){this.stopClock();++this.revision;this.loading=false;this.source=null;this.previous=null;this.pendingSource='';for(const a of this.cache.values())a.cancel();this.cache.clear();}else{this.transient=false;this.base();}};

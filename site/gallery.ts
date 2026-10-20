@@ -29,10 +29,10 @@ function save(){try{localStorage.setItem('pixel-pets-view',JSON.stringify(view))
 function load(url:string){
  let entry=images.get(url);if(entry){images.delete(url);images.set(url,entry);return entry;}
  const image=new Image();image.decoding='async';entry={image,ready:false,failed:false};const own=entry;
- image.onload=()=>void image.decode().then(()=>{own.ready=true;signature='';groupSignature='';drawSolo();drawGroup(0);schedule();},()=>{own.failed=true;failedHD=true;signature='';groupSignature='';drawSolo();drawGroup(0);schedule();});
+ image.onload=()=>void image.decode().then(()=>{own.ready=true;signature='';groupSignature='';if(!document.hidden){drawSolo();drawGroup(0);schedule();}},()=>{own.failed=true;failedHD=true;signature='';groupSignature='';drawSolo();drawGroup(0);schedule();});
  image.onerror=()=>{own.failed=true;failedHD=true;signature='';groupSignature='';drawSolo();drawGroup(0);schedule();};image.src=url;images.set(url,entry);
  // At most twelve decoded atlas chunks; hero uses real160px sources, solo up to320.
- while(images.size>12)images.delete(images.keys().next().value!);
+ while(images.size>12){const key=images.keys().next().value!,old=images.get(key)!;images.delete(key);if(!old.ready){old.image.onload=old.image.onerror=null;old.image.src='';}}
  return entry;
 }
 function source(c:Character,a:string,n:number,level:'pixel'|'160'|'320'):Source|undefined{

@@ -14,10 +14,13 @@ jobs:
         include:
           - os: windows-latest
             name: Windows-x64
+            bundles: nsis
           - os: macos-15
             name: macOS-arm64
+            bundles: app,dmg
           - os: macos-15-intel
             name: macOS-x64
+            bundles: app,dmg
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     defaults:
@@ -39,7 +42,7 @@ jobs:
       - run: npm run build
       - run: npm test
       - run: cargo test --locked --manifest-path src-tauri/Cargo.toml
-      - run: npm run build:app
+      - run: npm run build:app -- --bundles ${{ matrix.bundles }}
       - name: Run real native renderer smoke test
         run: npm run smoke
       - name: Name downloads and write checksums

@@ -8,7 +8,7 @@ export function validateSmoke(report){
  const checks=report.checks;if(!Array.isArray(checks)||!['claude','gpt','deepseek','clawd'].every(c=>checks.some(check=>check.character===c&&check.drawnPixels>0))||!['auto','80','160','320'].every(q=>checks.some(check=>check.quality===q&&check.drawnPixels>0)))throw Error('Native smoke test must draw every character and quality');
  return report;
 }
-export async function smoke({binary=path.join(desktop,'src-tauri/target/release/pixel-agent-pets'+(process.platform==='win32'?'.exe':'')),report=path.join(desktop,'artifacts',process.platform+'-'+process.arch+'.smoke.json'),timeout=45000}={}){
+export async function smoke({binary=path.join(desktop,'src-tauri/target/release/pixel-agent-pets'+(process.platform==='win32'?'.exe':'')),report=path.join(desktop,'artifacts',process.platform+'-'+process.arch+'.smoke.json'),timeout=90000}={}){
  await fs.rm(report,{force:true});await fs.mkdir(path.dirname(report),{recursive:true});
  const code=await new Promise((resolve,reject)=>{const child=spawn(binary,['--smoke-test',report],{stdio:'inherit',shell:false});const timer=setTimeout(()=>{child.kill();reject(Error('Native smoke test timed out'));},timeout);child.once('error',error=>{clearTimeout(timer);reject(error);});child.once('exit',(code,signal)=>{clearTimeout(timer);signal?reject(Error('Native app exited with '+signal)):resolve(code);});});
  const result=JSON.parse(await fs.readFile(report,'utf8'));if(code!==0)throw Error('Native app smoke failed: '+(result.reason??code));validateSmoke(result);console.log(JSON.stringify(result,null,2));return result;

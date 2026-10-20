@@ -1,7 +1,7 @@
 {
   "name": "dsh-pixel-agent-pets",
   "version": "0.4.0",
-  "description": "Four local pixel companions for Codex desktop and official DeepSeek Harness",
+  "description": "Four local pixel companions: native macOS/Windows desktop pets, full official DSH plugin and Codex compatibility",
   "type": "module",
   "license": "MIT",
   "main": "./dist/index.js",
