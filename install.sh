@@ -4,7 +4,7 @@ umask 077
 
 # Installs only this project's prebuilt release. Model credentials are never read.
 if [[ "${1:-}" == "--help" ]]; then
-  printf '%s\n' '抱抱龙 Pets: install.sh --codex | --dsh [--profile NAME]' 'Restore: install.sh uninstall --codex | --dsh [--profile NAME]' 'Codex：官方九状态兼容图集；DSH：完整66套动作。'
+  printf '%s\n' '抱抱龙 Pets: install.sh [--codex | --dsh | --desktop] [--profile NAME]' '不带参数：自动识别本机 Codex 与 DSH；两者都没有时，macOS 安装桌面版。' 'Restore: install.sh uninstall --codex | --dsh | --desktop [--profile NAME]' 'Codex：官方九状态兼容图集；DSH 与桌面版：完整66套动作。'
   exit 0
 fi
 for pet_tool in curl tar awk mktemp; do
@@ -21,7 +21,7 @@ case "$(uname -m)" in
   *) printf '%s\n' '暂不支持这台电脑的处理器架构。' >&2; exit 1 ;;
 esac
 pet_tmp="$(mktemp -d "${TMPDIR:-/tmp}/baobaolong-install.XXXXXXXX")"
-trap 'rm -rf -- "$pet_tmp"' EXIT
+trap '[[ ! -d "$pet_tmp/mnt" ]] || hdiutil detach -quiet -force "$pet_tmp/mnt" </dev/null >/dev/null 2>&1 || true; rm -rf -- "$pet_tmp"' EXIT
 pet_sha() {
   if command -v shasum >/dev/null; then shasum -a 256 "$1" | awk '{print $1}'
   elif command -v sha256sum >/dev/null; then sha256sum "$1" | awk '{print $1}'
@@ -33,9 +33,75 @@ pet_archive='Pixel-Agent-Pets-Installer.tar.gz'
 pet_codex_only=false
 pet_codex_requested=false
 pet_dsh_requested=false
+pet_desktop_requested=false
+pet_command=install
+case "${1:-}" in doctor|uninstall) pet_command="$1" ;; esac
+pet_args=()
 for pet_arg in "$@"; do
-  case "$pet_arg" in --codex) pet_codex_requested=true;; --dsh) pet_dsh_requested=true;; --both) pet_codex_requested=true; pet_dsh_requested=true;; esac
+  case "$pet_arg" in
+    --codex) pet_codex_requested=true ;;
+    --dsh) pet_dsh_requested=true ;;
+    --both) pet_codex_requested=true; pet_dsh_requested=true ;;
+    --desktop) pet_desktop_requested=true; continue ;;
+  esac
+  pet_args+=("$pet_arg")
 done
+# No target: install into whatever this machine already runs.
+if [[ "$pet_command" == install && "$pet_codex_requested$pet_dsh_requested$pet_desktop_requested" == falsefalsefalse ]]; then
+  if [[ -d "${CODEX_HOME:-$HOME/.codex}" ]]; then pet_codex_requested=true; pet_args+=(--codex); fi
+  if grep -qs '"@deepseek-ai/dsh-web-app"' "${DSH_HOME:-$HOME/.dsh}"/profiles/*/package.json; then pet_dsh_requested=true; pet_args+=(--dsh); fi
+  if [[ "$pet_codex_requested$pet_dsh_requested" == falsefalse ]]; then
+    [[ "$pet_os" == darwin ]] || { printf '%s\n' '没有找到 Codex 或 DSH 网页版。桌面版下载：https://github.com/plbbl/pixel-agent-pets/releases/latest' >&2; exit 1; }
+    pet_desktop_requested=true
+    printf '%s\n' '没有找到 Codex 或 DSH 网页版，安装桌面版。'
+  else
+    printf '已识别：%s\n' "$([[ "$pet_codex_requested" == true ]] && printf 'Codex ')$([[ "$pet_dsh_requested" == true ]] && printf 'DSH')"
+  fi
+fi
+pet_desktop() {
+  [[ "$pet_os" == darwin ]] || { printf '%s\n' '桌面版一键安装支持 macOS；Windows 请下载 https://github.com/plbbl/pixel-agent-pets/releases/latest' >&2; return 1; }
+  local app_name='抱抱龙桌宠.app' dir=/Applications
+  [[ -w "$dir" ]] || dir="$HOME/Applications"
+  if [[ "$pet_command" == doctor ]]; then
+    for dir in /Applications "$HOME/Applications"; do
+      [[ ! -d "$dir/$app_name" ]] || { printf '桌面版：%s\n' "$dir/$app_name"; return 0; }
+    done
+    printf '%s\n' '桌面版：未安装'
+    return 0
+  fi
+  if [[ "$pet_command" == uninstall ]]; then
+    pkill -f "/$app_name/Contents/MacOS/" </dev/null >/dev/null 2>&1 || true
+    rm -rf -- "/Applications/$app_name" "$HOME/Applications/$app_name"
+    printf '%s\n' '桌面版已移除。'
+    return 0
+  fi
+  local dmg="Pixel-Agent-Pets-macOS-$pet_arch.dmg"
+  printf '%s\n' '正在下载抱抱龙桌宠…'
+  pet_download "$pet_base/$dmg" "$pet_tmp/$dmg"
+  pet_download "$pet_base/$dmg.sha256" "$pet_tmp/$dmg.sha256"
+  local expected
+  expected="$(awk -v name="$dmg" '$2 == name || $2 == "*" name {print $1}' "$pet_tmp/$dmg.sha256")"
+  [[ "$expected" =~ ^[0-9a-f]{64}$ && "$(pet_sha "$pet_tmp/$dmg")" == "$expected" ]] || { printf '%s\n' '桌面版校验失败，未安装。' >&2; return 1; }
+  mkdir "$pet_tmp/mnt"
+  # Children get /dev/null: under `curl | bash` stdin is the rest of this script.
+  hdiutil attach -nobrowse -readonly -noautoopen -mountpoint "$pet_tmp/mnt" "$pet_tmp/$dmg" </dev/null >/dev/null
+  [[ -d "$pet_tmp/mnt/$app_name" ]] || { printf '%s\n' '安装包里没有找到桌面应用。' >&2; return 1; }
+  mkdir -p "$dir"
+  rm -rf -- "$dir/$app_name.installing"
+  ditto "$pet_tmp/mnt/$app_name" "$dir/$app_name.installing" </dev/null
+  hdiutil detach -quiet "$pet_tmp/mnt" </dev/null && rmdir "$pet_tmp/mnt"
+  # Quit an older copy so `open` starts the new one instead of focusing it.
+  pkill -f "$dir/$app_name/Contents/MacOS/" </dev/null >/dev/null 2>&1 && sleep 1 || true
+  rm -rf -- "$dir/$app_name"
+  mv "$dir/$app_name.installing" "$dir/$app_name"
+  open "$dir/$app_name" </dev/null
+  printf '桌面版已安装到 %s 并启动。\n' "$dir"
+}
+if [[ "$pet_desktop_requested" == true ]]; then
+  pet_desktop
+  [[ "$pet_codex_requested$pet_dsh_requested" != falsefalse ]] || exit 0
+fi
+set -- ${pet_args[@]+"${pet_args[@]}"}
 if [[ "$pet_codex_requested" == true && "$pet_dsh_requested" == false ]]; then
   pet_codex_only=true
   pet_archive='Pixel-Agent-Pets-Codex.tar.gz'

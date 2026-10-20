@@ -1,81 +1,51 @@
 # 安装、检查与卸载
 
-插件安装入口使用已经构建的 Release，校验压缩包和每个文件。无需克隆仓库、编译、安装 npm 依赖或为宠物填写 API Key。缺少 Node.js 22+ 时会缓存校验过的官方运行环境，不替换系统 Node。
+## 一行命令
 
-## 独立桌宠：macOS / Windows
+```sh
+curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash
+```
 
-在 [最新 Release](https://github.com/plbbl/pixel-agent-pets/releases/latest) 下载对应系统的桌宠安装包。macOS 打开 DMG 并拖入 Applications，Windows 运行安装程序。不需要 Node.js、DSH、Codex 或 API Key。
+按本机已有的东西安装：
 
-启动后只显示透明宠物，默认自动跟随本机 Codex／DSH 的任务状态。右键或托盘「跟随工作」可选择自动、Codex、DSH 或关闭。单击摸摸，悬停回应，拖动松手有落地反应；久闲休息，点击唤醒。空闲时自主演出，真实工作开始会优先接管。双击播放完整经典演出。
+| 找到 | 安装 |
+|---|---|
+| `~/.codex`（或 `$CODEX_HOME`） | Codex 宠物图集 |
+| DSH 网页 profile（`~/.dsh` 或 `$DSH_HOME`） | DSH 完整动作插件 |
+| 都没有（macOS） | 桌面版，装进“应用程序”并启动 |
 
-右键也可切换角色、单个动作、大小、画质、显示／隐藏与退出。偏好和窗口位置自动保存；隐藏时暂停绘制。系统 WebView 负责显示，不捆绑另一份浏览器。
+下载的安装包都会先做 SHA-256 校验。缺 Node.js 22+ 时，安装器自带一份独立运行环境。
 
-Codex 使用本机只读任务事件，默认遵循 `CODEX_HOME`。DSH 需要安装本项目新版插件；更新后在任务结束时正常重启 DSH 网页服务，单刷新网页不足以重载后台插件。桌宠不代停任务，也不为建立连接重启 CLI。来源未连接时保持自主活动，不伪造任务状态。
-
-卸载时移除应用即可。独立桌宠不注入或修改 Codex／DSH 内核，仅投影白名单事件；不保存聊天正文、工具参数或密钥。关闭跟随即可停止观察任务状态。
-
-## Codex：官方 9 状态兼容版
+## 指定目标
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- --codex
-```
-
-使用支持自定义宠物的 Codex 桌面版。安装器仅添加官方格式的 `pet.json` 与 `spritesheet.png`，不修改应用、签名、CLI 或模型内核，不需要重新签名。已有本项目宠物更新前移入备份；不会覆盖其他来源的宠物。
-
-打开 `⌘, → Mini 与虚拟宠物`，刷新列表并选择角色；若没有更新，重新打开 Codex。Claude、GPT、DeepSeek 各有高清与 80px 像素资源，Clawd 使用原版像素。官方宠物「外观」可调整大小（80–224px）。
-
-**安装结果是 9 种固定状态映射。**图集由官方任务状态机播放，思考、文字输出与工具执行共用 `running`，没有完整 66 动作自动触发、中文剧情或上方字幕。展示页播放的是完整素材库，和 Codex 安装后的映射范围不同。
-
-默认遵循 `CODEX_HOME`，仅管理带本项目标记的 `pets/pixel-agent-*` 目录。旧版本与卸载文件保留在其 `pixel-agent-pets-backups/` 中。
-
-## 官方 DSH：完整动作插件
-
-先安装并启动过[官方 DeepSeek Harness 网页版](https://github.com/deepseek-ai/deepseek-harness)，再运行：
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- --dsh
-```
-
-安装器发现已有网页 profile：单个自动选择，多个询问。终端 TUI profile 无法显示网页插件；没有网页 profile 时先用官方 DSH 启动一次。安装后重新打开所选网页窗口，右键宠物调整角色、大小和清晰度，或预览完整动作。宠物默认贴着输入框；按住拖动可移动到页面其他位置，右键「重置位置 · 跟随输入框」可重新绑定。自由位置自动保存在当前浏览器，调整窗口或放大宠物时保持可见。
-
-DSH 保留全部 66 套动作与细分状态触发，包括本地剧情字幕。自动清晰度随大小与屏幕精度选择 80／160／320px 源；Clawd 保留原始像素。调整显示不会重启当前动作。实际网页显示已核验于官方 **0.1.0-rc.6 web 客户端**。
-
-通过官方插件命令安装，只添加本项目依赖与 bundle。原配置先备份；已有损坏配置、缺失的其他插件或官方安装命令失败时停止并恢复配置，不修补其他用户配置。
-
-默认遵循 `DSH_HOME`。可明确指定已存在的网页 profile：
-
-```sh
 curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- --dsh --profile YOUR_PROFILE
+curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- --desktop
 ```
 
-官方 `dsh` 不在标准位置时，可指定可执行文件：
+- `--both`：Codex 和 DSH 都装。
+- `--profile NAME`：有多个 DSH 网页 profile 时指定一个。
+- `PIXEL_PETS_DSH_BIN=/path/to/dsh`：`dsh` 不在标准位置时使用。
+- Windows 桌面版：下载 [`Pixel-Agent-Pets-Windows-x64-setup.exe`](https://github.com/plbbl/pixel-agent-pets/releases/latest/download/Pixel-Agent-Pets-Windows-x64-setup.exe) 运行即可。
+
+## 装完以后
+
+- **桌面版**：右键宠物或托盘图标，换角色、动作、大小、清晰度；「跟随工作」选自动、Codex、DSH 或关闭。双击播放完整剧情。
+- **Codex**：`⌘,` → Mini 与虚拟宠物，刷新后选角色；大小在「外观」里调（80–224px）。
+- **DSH**：重新打开网页窗口。右键宠物换角色、大小和清晰度；拖动可自由摆放，右键「重置位置 · 跟随输入框」回到输入框旁。DSH 更新插件后，等当前任务结束再重启网页服务。
+
+## 检查与卸载
 
 ```sh
-export PIXEL_PETS_DSH_BIN=/absolute/path/to/dsh
-curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- --dsh
+curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- doctor --codex      # 或 --dsh / --desktop
+curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- uninstall --codex   # 或 --dsh / --desktop
 ```
 
-## 检查
+卸载 Codex 宠物时，文件移到 `$CODEX_HOME/pixel-agent-pets-backups/`，需要时可以找回。
 
-```sh
-curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- doctor --codex
-curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- doctor --dsh
-```
+## 文件位置
 
-检查文件、版本、插件链接与启用状态，不启动模型任务。多个 DSH profile 仍会询问，也可追加 `--profile YOUR_PROFILE`。
-
-## 卸载与恢复
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- uninstall --codex
-curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- uninstall --dsh
-```
-
-Codex 仅把本项目管理的宠物目录移入备份，不需要恢复或重新签名应用。DSH 只禁用并移除本插件，不卸载官方 DSH 或其他插件。备份目录与安装记录保留，供需要时恢复本项目文件。
-
-安装器资源与记录默认保存在：
-
-- macOS：`~/Library/Application Support/抱抱龙/Pets/`。
-- Linux（DSH）：`~/.local/share/baobaolong-pets/`，或 `$XDG_DATA_HOME/baobaolong-pets/`。
-
-可通过 `PIXEL_PETS_INSTALL_HOME` 指定位置。Codex 与 DSH 插件均使用已有界面；独立桌宠是独立安装的应用。
+- 安装器缓存：macOS `~/Library/Application Support/抱抱龙/Pets/`，Linux `~/.local/share/baobaolong-pets/`；可用 `PIXEL_PETS_INSTALL_HOME` 改。
+- Codex 宠物：`$CODEX_HOME/pets/pixel-agent-*`。
+- 桌面版：`/Applications/抱抱龙桌宠.app`（无写权限时为 `~/Applications`）。

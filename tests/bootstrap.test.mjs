@@ -111,3 +111,51 @@ test('a failed same-version payload restores the exact previous package, returns
   assert.equal(await fs.readlink(link),current);assert.deepEqual(await fs.readFile(path.join(link,'keep.txt')),original);assert.equal(await fs.readFile(path.join(older,'keep.txt'),'utf8'),'other version');
  }finally{await f.clean();}
 });
+
+test('no target installs into the Codex and DSH web profiles already on this machine',async()=>{
+ const f=await fixture();try{
+  const home=path.join(f.root,'home');f.env.HOME=home;delete f.env.CODEX_HOME;delete f.env.DSH_HOME;await fs.mkdir(home);
+  const none=f.run();assert.equal(none.status,1);assert.match(none.stderr,/没有找到 Codex 或 DSH/);await assert.rejects(fs.access(f.result));
+  await fs.mkdir(path.join(home,'.codex'));
+  const codex=f.run();assert.equal(codex.status,0,codex.stderr);assert.match(codex.stdout,/已识别：Codex/);
+  let installed=JSON.parse(await fs.readFile(f.result));assert.deepEqual(installed.argv,['--codex']);assert.equal(installed.file,await fs.realpath(path.join(f.home,'versions/0.3.0-codex/install.cjs')));
+  const headless=path.join(home,'.dsh/profiles/tui'),web=path.join(home,'.dsh/profiles/web');await fs.mkdir(headless,{recursive:true});await fs.mkdir(web,{recursive:true});
+  await fs.writeFile(path.join(headless,'package.json'),JSON.stringify({dsh:{profile:{bundles:['@deepseek-ai/dsh-headless']}}}));
+  assert.equal(f.run().status,0);assert.deepEqual(JSON.parse(await fs.readFile(f.result)).argv,['--codex'],'a terminal-only DSH profile cannot show a web pet');
+  await fs.writeFile(path.join(web,'package.json'),JSON.stringify({dsh:{profile:{bundles:['@deepseek-ai/dsh-web-app']}}}));
+  const both=f.run('--profile','web');assert.equal(both.status,0,both.stderr);installed=JSON.parse(await fs.readFile(f.result));
+  assert.deepEqual(installed.argv,['--profile','web','--codex','--dsh']);assert.equal(installed.file,await fs.realpath(path.join(f.home,'versions/0.3.0/install.cjs')));
+  const explicit=f.run('uninstall','--dsh');assert.equal(explicit.status,0,explicit.stderr);assert.deepEqual(JSON.parse(await fs.readFile(f.result)).argv,['uninstall','--dsh']);
+ }finally{await f.clean();}
+});
+
+async function desktopFixture(){
+ const f=await fixture(),shim=path.join(f.root,'bin'),home=path.join(f.root,'home'),dmg=path.join(f.root,'desktop.dmg'),log=path.join(f.root,'desktop.log');
+ await fs.mkdir(home);await fs.writeFile(dmg,'verified disk image');
+ const digest=createHash('sha256').update(await fs.readFile(dmg)).digest('hex');await fs.writeFile(dmg+'.sha256',digest+'  Pixel-Agent-Pets-macOS-arm64.dmg\n');
+ await fs.writeFile(path.join(shim,'uname'),'#!/bin/sh\ncase "$1" in -s) echo Darwin;; -m) echo arm64;; esac\n',{mode:0o755});
+ await fs.writeFile(path.join(shim,'curl'),'#!/bin/sh\npet_url=""\npet_out=""\nwhile [ "$#" -gt 0 ]; do\n case "$1" in https:*) pet_url="$1";; --output) shift; pet_out="$1";; esac\n shift\ndone\necho "curl $pet_url" >> "$DESKTOP_LOG"\ncase "$pet_url" in */Pixel-Agent-Pets-macOS-arm64.dmg) cp "$DESKTOP_DMG" "$pet_out";; */Pixel-Agent-Pets-macOS-arm64.dmg.sha256) cp "$DESKTOP_DMG.sha256" "$pet_out";; */Pixel-Agent-Pets-Codex.tar.gz) cp "$BOOTSTRAP_ARCHIVE" "$pet_out";; */SHA256SUMS) cp "$BOOTSTRAP_SUMS" "$pet_out";; *) exit 88;; esac\n',{mode:0o755});
+ // The mounted image holds the app bundle; detaching removes it like a real unmount.
+ await fs.writeFile(path.join(shim,'hdiutil'),'#!/bin/sh\necho "hdiutil $1" >> "$DESKTOP_LOG"\ncase "$1" in attach) cat >/dev/null; while [ "$#" -gt 1 ]; do [ "$1" = -mountpoint ] && mnt="$2"; shift; done; mkdir -p "$mnt/抱抱龙桌宠.app/Contents/MacOS"; echo new > "$mnt/抱抱龙桌宠.app/Contents/MacOS/version";; detach) for last; do :; done; rm -rf "$last"/*;; esac\n',{mode:0o755});
+ await fs.writeFile(path.join(shim,'ditto'),'#!/bin/sh\ncp -R "$1" "$2"\n',{mode:0o755});
+ for(const[name,status]of[['open',0],['pkill',1]])await fs.writeFile(path.join(shim,name),'#!/bin/sh\necho "'+name+' $*" >> "$DESKTOP_LOG"\nexit '+status+'\n',{mode:0o755});
+ Object.assign(f.env,{HOME:home,DESKTOP_DMG:dmg,DESKTOP_LOG:log});delete f.env.CODEX_HOME;delete f.env.DSH_HOME;
+ return{...f,home,dmg,log,app:path.join(home,'Applications/抱抱龙桌宠.app')};
+}
+test('macOS desktop install verifies the disk image, replaces the app and launches it without touching plugins',async()=>{
+ const f=await desktopFixture();try{
+  await fs.mkdir(path.join(f.app,'Contents/MacOS'),{recursive:true});await fs.writeFile(path.join(f.app,'Contents/MacOS/version'),'old');
+  const result=f.run();assert.equal(result.status,0,result.stderr);assert.match(result.stdout,/安装桌面版/);
+  assert.equal(await fs.readFile(path.join(f.app,'Contents/MacOS/version'),'utf8'),'new\n');await assert.rejects(fs.access(f.app+'.installing'));await assert.rejects(fs.access(f.result));
+  const log=await fs.readFile(f.log,'utf8');assert.match(log,/hdiutil attach/);assert.match(log,/hdiutil detach/);assert.match(log,new RegExp('open '+f.app.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  assert.match(f.run('doctor','--desktop').stdout,/桌面版：.*抱抱龙桌宠\.app/);
+  const removed=f.run('uninstall','--desktop');assert.equal(removed.status,0,removed.stderr);await assert.rejects(fs.access(f.app));assert.match(f.run('doctor','--desktop').stdout,/未安装/);
+  // `curl | bash`: the script arrives on stdin, which the mounting tool must not swallow before the Codex step.
+  const piped=spawnSync('bash',['-s','--','--desktop','--codex'],{env:f.env,input:await fs.readFile(bootstrap),encoding:'utf8',timeout:20000});
+  assert.equal(piped.status,0,piped.stderr);assert.match(piped.stdout,/桌面版已安装/);await fs.access(f.app);
+  assert.deepEqual(JSON.parse(await fs.readFile(f.result)).argv,['--codex']);await fs.rm(f.result);
+  await fs.rm(f.app,{recursive:true});
+  await fs.writeFile(f.dmg+'.sha256','0'.repeat(64)+'  Pixel-Agent-Pets-macOS-arm64.dmg\n');
+  const corrupt=f.run('--desktop');assert.notEqual(corrupt.status,0);assert.match(corrupt.stderr,/校验失败/);await assert.rejects(fs.access(f.app));
+ }finally{await f.clean();}
+});

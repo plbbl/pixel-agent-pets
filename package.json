@@ -38,22 +38,20 @@
     "test": "node --test tests/*.test.mjs",
     "check": "tsc --noEmit",
     "build:site": "node scripts/build-site.mjs",
-    "build:media": "node scripts/build-media.mjs",
+    "build:media": "python3 scripts/build-readme-media.py",
     "build:installer": "node scripts/build-installer.mjs"
   },
   "dependencies": {
     "pngjs": "7.0.0"
   },
   "devDependencies": {
-    "@resvg/resvg-js": "2.6.2",
+    "@electron/asar": "3.4.1",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
     "esbuild": "0.25.12",
-    "gifenc": "1.0.3",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "typescript": "5.9.3",
-    "@electron/asar": "3.4.1"
+    "typescript": "5.9.3"
   },
   "peerDependencies": {
     "@deepseek-ai/dsh-client-runtime": ">=0.1.0-rc.6",
