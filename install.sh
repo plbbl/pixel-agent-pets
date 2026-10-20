@@ -67,16 +67,37 @@ pet_version="$("$pet_node" -p 'require(process.argv[1]).version' "$pet_payload/p
 [[ "$pet_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.-]+)?$ ]] || { printf '%s\n' '安装包版本无效。' >&2; exit 1; }
 mkdir -p "$pet_home/versions"
 pet_destination="$pet_home/versions/$pet_version"
+[[ ! -L "$pet_destination" ]] || { printf '%s\n' '版本目录是用户符号链接，未替换。' >&2; exit 1; }
+export PATH="$(dirname "$pet_node"):$PATH"
+printf '%s\n' '安装包校验通过，正在配置宠物…'
+pet_previous=''
 if [[ -e "$pet_destination" ]]; then
   # Preserve the currently linked payload while making updates idempotent.
   pet_previous="$pet_destination.previous.$(date +%s).$$"
   mv "$pet_destination" "$pet_previous"
 fi
-mv "$pet_payload" "$pet_destination"
-export PATH="$(dirname "$pet_node"):$PATH"
-printf '%s\n' '安装包校验通过，正在配置宠物…'
-if [[ -r /dev/tty ]] && ( : </dev/tty ) 2>/dev/null; then
-  "$pet_node" "$pet_destination/install.cjs" "$@" </dev/tty
+pet_restore() {
+  [[ ! -L "$pet_destination" ]] || return 1
+  rm -rf -- "$pet_destination" || return 1
+  if [[ -n "$pet_previous" ]]; then mv "$pet_previous" "$pet_destination"; fi
+}
+pet_run() {
+  if [[ -r /dev/tty ]] && ( : </dev/tty ) 2>/dev/null; then
+    "$pet_node" "$pet_destination/install.cjs" "$@" </dev/tty
+  else
+    "$pet_node" "$pet_destination/install.cjs" "$@"
+  fi
+}
+if mv "$pet_payload" "$pet_destination"; then
+  if pet_run "$@"; then
+    if [[ -n "$pet_previous" ]]; then rm -rf -- "$pet_previous"; fi
+  else
+    pet_status=$?
+    pet_restore || printf '%s\n' '安装失败，原版本备份仍保留在本轮 previous 目录，请勿删除。' >&2
+    exit "$pet_status"
+  fi
 else
-  "$pet_node" "$pet_destination/install.cjs" "$@"
+  pet_status=$?
+  pet_restore || printf '%s\n' '无法替换安装包，原版本备份仍保留在本轮 previous 目录。' >&2
+  exit "$pet_status"
 fi

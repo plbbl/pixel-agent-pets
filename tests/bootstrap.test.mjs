@@ -9,7 +9,7 @@ const bootstrap=path.resolve('install.sh');
 async function fixture(){
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'pets bootstrap 抱抱龙 ')),payload=path.join(root,'source/pixel-agent-pets'),shim=path.join(root,'bin');await fs.mkdir(payload,{recursive:true});await fs.mkdir(shim);
  await fs.writeFile(path.join(payload,'package.json'),JSON.stringify({version:'0.3.0'}));
- await fs.writeFile(path.join(payload,'install.cjs'),"require('node:fs').writeFileSync(process.env.BOOTSTRAP_RESULT,JSON.stringify({argv:process.argv.slice(2),file:__filename}));\nconsole.log('fixture installer executed');\n");
+ await fs.writeFile(path.join(payload,'install.cjs'),"require('node:fs').writeFileSync(process.env.BOOTSTRAP_RESULT,JSON.stringify({argv:process.argv.slice(2),file:__filename}));\nconsole.log('fixture installer executed');\nprocess.exitCode=Number(process.env.BOOTSTRAP_EXIT_CODE??0);\n");
  const archive=path.join(root,'Pixel-Agent-Pets-Installer.tar.gz');assert.equal(spawnSync('tar',['-czf',archive,'-C',path.join(root,'source'),'pixel-agent-pets']).status,0);
  const digest=createHash('sha256').update(await fs.readFile(archive)).digest('hex'),sums=path.join(root,'SHA256SUMS');await fs.writeFile(sums,digest+'  Pixel-Agent-Pets-Installer.tar.gz\n');
  await fs.writeFile(path.join(shim,'curl'),'#!/bin/sh\npet_url=""\npet_out=""\nwhile [ "$#" -gt 0 ]; do\n case "$1" in https:*) pet_url="$1";; --output) shift; pet_out="$1";; esac\n shift\ndone\ncase "$pet_url" in */Pixel-Agent-Pets-Installer.tar.gz) cp "$BOOTSTRAP_ARCHIVE" "$pet_out";; */SHA256SUMS) cp "$BOOTSTRAP_SUMS" "$pet_out";; *) exit 88;; esac\n',{mode:0o755});
@@ -78,5 +78,29 @@ test('a rejected runtime checksum cannot execute the payload or replace an exist
   const result=f.run('--dsh','--profile','web');assert.notEqual(result.status,0);assert.match(result.stderr,/运行环境校验失败/);
   assert.deepEqual(await fs.readFile(f.globalNode),f.globalBytes);await assert.rejects(fs.access(f.used));await assert.rejects(fs.access(f.result));await assert.rejects(fs.access(path.join(f.home,'runtime')));await assert.rejects(fs.access(path.join(f.home,'versions')));
   const downloads=(await fs.readFile(f.downloads,'utf8')).trim().split('\n');assert.equal(downloads.filter(url=>url===f.runtimeURL).length,1);
+ }finally{await f.clean();}
+});
+
+test('repeated same-version install, doctor and uninstall retain one current payload and leave other versions and user links intact',async()=>{
+ const f=await fixture();try{
+  const versions=path.join(f.home,'versions'),older=path.join(versions,'0.2.0'),historical=path.join(versions,'0.3.0.previous.user-kept'),current=path.join(versions,'0.3.0'),link=path.join(f.root,'user-plugin-link');
+  for(const directory of [older,historical]){await fs.mkdir(directory,{recursive:true});await fs.writeFile(path.join(directory,'keep.txt'),'user-owned marker');}
+  await fs.symlink(current,link);
+  for(const args of [['--dsh'],['doctor','--dsh'],['--dsh'],['uninstall','--dsh']]){
+   const result=f.run(...args);assert.equal(result.status,0,result.stderr);assert.deepEqual((await fs.readdir(versions)).sort(),['0.2.0','0.3.0','0.3.0.previous.user-kept']);
+   assert.equal(await fs.readlink(link),current);assert.equal(await fs.readFile(path.join(link,'package.json'),'utf8'),JSON.stringify({version:'0.3.0'}));
+  }
+  assert.equal(await fs.readFile(path.join(older,'keep.txt'),'utf8'),'user-owned marker');assert.equal(await fs.readFile(path.join(historical,'keep.txt'),'utf8'),'user-owned marker');
+ }finally{await f.clean();}
+});
+
+test('a failed same-version payload restores the exact previous package, returns its exit code and leaves no extra backup',async()=>{
+ const f=await fixture();try{
+  const versions=path.join(f.home,'versions'),current=path.join(versions,'0.3.0'),older=path.join(versions,'0.2.0'),link=path.join(f.root,'user-plugin-link');
+  await fs.mkdir(current,{recursive:true});await fs.mkdir(older);const original=Buffer.from('previous package must remain available\n');
+  await fs.writeFile(path.join(current,'keep.txt'),original);await fs.writeFile(path.join(current,'package.json'),'{"version":"0.3.0","original":true}');await fs.writeFile(path.join(current,'install.cjs'),'original installer bytes');await fs.writeFile(path.join(older,'keep.txt'),'other version');await fs.symlink(current,link);
+  f.env.BOOTSTRAP_EXIT_CODE='37';const result=f.run('doctor','--dsh');assert.equal(result.status,37,result.stderr);
+  assert.deepEqual((await fs.readdir(versions)).sort(),['0.2.0','0.3.0']);assert.deepEqual(await fs.readFile(path.join(current,'keep.txt')),original);assert.equal(await fs.readFile(path.join(current,'package.json'),'utf8'),'{"version":"0.3.0","original":true}');assert.equal(await fs.readFile(path.join(current,'install.cjs'),'utf8'),'original installer bytes');
+  assert.equal(await fs.readlink(link),current);assert.deepEqual(await fs.readFile(path.join(link,'keep.txt')),original);assert.equal(await fs.readFile(path.join(older,'keep.txt'),'utf8'),'other version');
  }finally{await f.clean();}
 });
