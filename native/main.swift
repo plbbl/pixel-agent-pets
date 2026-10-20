@@ -67,6 +67,7 @@ final class Companion: NSObject, NSApplicationDelegate {
     private var lastSpecial = Date.distantPast, pendingSpecial = false
     private var status: NSStatusItem!
     private var following = true
+    private var manualPreview = false
     private var stopped = false
     private var selectedTool = ""
     private var globalMouse: Any?
@@ -117,6 +118,7 @@ final class Companion: NSObject, NSApplicationDelegate {
     private func update(_ next: Activity) {
         let old = state; state = next
         if stopped { return }
+        if manualPreview { return }
         if family(old) != family(next) { phaseSince = Date() }
         if next.toolID != old.toolID && !next.toolID.isEmpty {
             let name = next.tool.lowercased()
@@ -193,9 +195,9 @@ final class Companion: NSObject, NSApplicationDelegate {
             }
             schedule(view.previous != nil ? 0.05 : max(0.05, 15 - elapsed)); return
         }
-        if transient && state.busy && action == policy.send[character] && elapsed >= 0.9 { transient = false; base(); return }
+        if !manualPreview && transient && state.busy && action == policy.send[character] && elapsed >= 0.9 { transient = false; base(); return }
         if !transient && desired() != action { base(); return }
-        guard let selected = playbackFrame(total: a.frames, fps: a.fps, elapsed: elapsed, holdAt: hold ? (a.sustain ?? a.frames - 1) : nil) else { transient = false; base(); return }
+        guard let selected = playbackFrame(total: a.frames, fps: a.fps, elapsed: elapsed, holdAt: hold ? (a.sustain ?? a.frames - 1) : nil) else { transient = false; manualPreview = false; base(); return }
         if selected != frame || view.previous != nil { paint(selected) }
         updateCaption(elapsed)
         schedule(hold && selected == (a.sustain ?? a.frames - 1) && view.previous == nil ? 1 : max(0.005, 1 / a.fps - elapsed.truncatingRemainder(dividingBy: 1 / a.fps)))
@@ -230,9 +232,9 @@ final class Companion: NSObject, NSApplicationDelegate {
     @objc private func choose(_ item: NSMenuItem) {
         guard let c = item.representedObject as? String else { return }
         character = c; UserDefaults.standard.set(c, forKey: "character"); cache.removeAll(); order.removeAll(); view.previous = nil; view.image = nil; action = ""; pendingSpecial = false
-        selectedTool = policy.states[c]?["tools-command-0"] ?? "idle"; transient = false; base(urgent: true); status.menu = menu()
+        selectedTool = policy.states[c]?["tools-command-0"] ?? "idle"; transient = false; manualPreview = false; base(urgent: true); status.menu = menu()
     }
-    @objc private func preview(_ item: NSMenuItem) { if let name = item.representedObject as? String { window.orderFrontRegardless(); stopped = false; play(name, transient: true) } }
+    @objc private func preview(_ item: NSMenuItem) { if let name = item.representedObject as? String { window.orderFrontRegardless(); stopped = false; manualPreview = true; play(name, transient: true) } }
     @objc private func toggleFollow() { following.toggle(); status.menu = menu() }
     @objc private func toggleVisible() {
         if window.isVisible { window.orderOut(nil); stopped = true; timer?.invalidate(); revision += 1; cache.removeAll(); order.removeAll(); view.image = nil; view.previous = nil }
