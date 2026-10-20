@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://plbbl.github.io/pixel-agent-pets/?quality=auto&amp;size=240#theater"><img src="media/hero.webp" width="100%" alt="Baobaolong Pixel Agent Pets: Claude, GPT, DeepSeek and Clawd"></a>
+  <a href="https://plbbl.github.io/pixel-agent-pets/?quality=auto&amp;size=240#theater"><img src="media/hero.gif" width="100%" alt="Baobaolong Pixel Agent Pets: Claude, GPT, DeepSeek and Clawd"></a>
 </p>
 
 <p align="center">
@@ -55,24 +55,24 @@ Afterwards: in Codex pick a pet under Settings → Mini & Pets; in DSH reopen th
 
 ## It works when you work
 
-<p align="center"><img src="media/work.webp" width="100%" alt="Each character's animation for sending, thinking, reading code, running commands, done and error"></p>
+<p align="center"><img src="media/work.gif" width="100%" alt="Each character's animation for sending, thinking, reading code, running commands, done and error"></p>
 
 Your agent works in the background; one glance tells you whether it is thinking, reading, running a command or done. The desktop app and DSH follow the real task state; Codex uses the nine official pet states.
 
 ## The crew
 
 <p align="center">
-  <img src="media/story-claude.webp" width="49%" alt="Claude: Chinese? A Chinese user? Account on hold">
-  <img src="media/story-gpt.webp" width="49%" alt="GPT: probe, gates, smoke test, acceptance matrix, finally starts work">
-  <img src="media/story-deepseek.webp" width="49%" alt="DeepSeek: no rice, begging, eating, stealing the rice cooker, food coma">
-  <img src="media/story-clawd.webp" width="49%" alt="Clawd: the original pixel crab from Claude Desktop">
+  <img src="media/story-claude.gif" width="49%" alt="Claude: Chinese? A Chinese user? Account on hold">
+  <img src="media/story-gpt.gif" width="49%" alt="GPT: probe, gates, smoke test, acceptance matrix, finally starts work">
+  <img src="media/story-deepseek.gif" width="49%" alt="DeepSeek: no rice, begging, eating, stealing the rice cooker, food coma">
+  <img src="media/story-clawd.gif" width="49%" alt="Clawd: the original pixel crab from Claude Desktop">
 </p>
 
 When idle they put on their own shows. Pat them, drag them or leave them alone — they react.
 
 ## All 66 animations
 
-<p align="center"><a href="https://plbbl.github.io/pixel-agent-pets/?quality=auto&amp;size=240#theater"><img src="media/wall.webp" width="100%" alt="All 66 animations of the four characters"></a></p>
+<p align="center"><a href="https://plbbl.github.io/pixel-agent-pets/?quality=auto&amp;size=240#theater"><img src="media/wall.gif" width="100%" alt="All 66 animations of the four characters"></a></p>
 
 <p align="center"><a href="https://plbbl.github.io/pixel-agent-pets/?quality=auto&amp;size=240#theater"><b>Watch them in 320px HD →</b></a></p>
 
@@ -92,7 +92,7 @@ git clone https://github.com/plbbl/pixel-agent-pets.git && cd pixel-agent-pets
 npm ci && npm run build && npm test
 ```
 
-Desktop app: see [desktop/](../desktop/README.md). The README animations are rendered from the original sprite atlases by `npm run build:media`.
+Desktop app: see [desktop/](../desktop/README.md). The README animations are rendered from the original sprite atlases by `npm run build:media` (Python 3, Pillow, NumPy).
 
 </details>
 

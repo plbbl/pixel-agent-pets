@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://plbbl.github.io/pixel-agent-pets/?quality=auto&amp;size=240#theater"><img src="docs/media/hero.webp" width="100%" alt="抱抱龙 Pixel Agent Pets：Claude、GPT、DeepSeek、Clawd 四个像素小同事"></a>
+  <a href="https://plbbl.github.io/pixel-agent-pets/?quality=auto&amp;size=240#theater"><img src="docs/media/hero.gif" width="100%" alt="抱抱龙 Pixel Agent Pets：Claude、GPT、DeepSeek、Clawd 四个像素小同事"></a>
 </p>
 
 <p align="center">
@@ -55,24 +55,24 @@ curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install
 
 ## 跟着干活
 
-<p align="center"><img src="docs/media/work.webp" width="100%" alt="四个角色在发送、思考、读代码、跑命令、完成、出错六种状态下各自的动作"></p>
+<p align="center"><img src="docs/media/work.gif" width="100%" alt="四个角色在发送、思考、读代码、跑命令、完成、出错六种状态下各自的动作"></p>
 
 AI 在后台干活，你看一眼就知道它在想、在读、在跑命令，还是已经干完了。桌面版和 DSH 跟随真实任务状态；Codex 版走官方宠物的 9 种状态。
 
 ## 四位同事
 
 <p align="center">
-  <img src="docs/media/story-claude.webp" width="49%" alt="Claude：中文？中国人？检测到中国用户，盖章封禁">
-  <img src="docs/media/story-gpt.webp" width="49%" alt="GPT：先打探针、查门禁、跑冒烟、补验收矩阵，终于开工">
-  <img src="docs/media/story-deepseek.webp" width="49%" alt="DeepSeek：没饭、讨饭、吃饭、偷电饭煲、晕碳">
-  <img src="docs/media/story-clawd.webp" width="49%" alt="Clawd：Claude Desktop 原版像素小螃蟹">
+  <img src="docs/media/story-claude.gif" width="49%" alt="Claude：中文？中国人？检测到中国用户，盖章封禁">
+  <img src="docs/media/story-gpt.gif" width="49%" alt="GPT：先打探针、查门禁、跑冒烟、补验收矩阵，终于开工">
+  <img src="docs/media/story-deepseek.gif" width="49%" alt="DeepSeek：没饭、讨饭、吃饭、偷电饭煲、晕碳">
+  <img src="docs/media/story-clawd.gif" width="49%" alt="Clawd：Claude Desktop 原版像素小螃蟹">
 </p>
 
 闲下来它们会自己演。摸一下、拖一下、放着不管，都有反应。
 
 ## 全部 66 套动作
 
-<p align="center"><a href="https://plbbl.github.io/pixel-agent-pets/?quality=auto&amp;size=240#theater"><img src="docs/media/wall.webp" width="100%" alt="四个角色的全部 66 套动作"></a></p>
+<p align="center"><a href="https://plbbl.github.io/pixel-agent-pets/?quality=auto&amp;size=240#theater"><img src="docs/media/wall.gif" width="100%" alt="四个角色的全部 66 套动作"></a></p>
 
 <p align="center"><a href="https://plbbl.github.io/pixel-agent-pets/?quality=auto&amp;size=240#theater"><b>在线看高清 320px →</b></a></p>
 
@@ -92,7 +92,7 @@ git clone https://github.com/plbbl/pixel-agent-pets.git && cd pixel-agent-pets
 npm ci && npm run build && npm test
 ```
 
-桌面版见 [desktop/](desktop/README.md)；README 动图由 `npm run build:media` 从原始动作图集生成。
+桌面版见 [desktop/](desktop/README.md)；README 动图由 `npm run build:media`（Python 3 + Pillow + NumPy）从原始动作图集生成。
 
 </details>
 

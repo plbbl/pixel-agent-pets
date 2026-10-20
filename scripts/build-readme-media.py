@@ -4,17 +4,22 @@
 Everything is composed at final resolution with nearest-neighbour scaling only:
 HD characters come from assets-hd (320/160 px), Clawd from its 80 px atlas at an
 integer scale, and all text uses the 12 px Fusion Pixel bitmap font (SIL OFL).
+Backgrounds are transparent; text only appears inside outlined bubbles and pills,
+so every image reads on both GitHub themes.
 
     python3 scripts/build-readme-media.py [hero work wall stories buttons cover]
 """
 import io
 import json
 import os
+import shutil
+import subprocess
 import sys
 import urllib.request
 import zipfile
 from functools import lru_cache
 
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,17 +27,11 @@ OUT = os.path.join(ROOT, 'docs', 'media')
 FONT = os.environ.get('PIXEL_FONT') or os.path.join(ROOT, 'work', 'fonts', 'fusion-pixel-12px-proportional-zh_hans.ms.bitmap.ttf')
 FONT_ZIP = 'https://github.com/TakWolf/fusion-pixel-font/releases/download/2026.10.16/fusion-pixel-font-12px-proportional-ms.bitmap.ttf-v2026.10.16.zip'
 
-# Palette: a night desk lit by the four characters' own colours.
 INK = (16, 17, 30)
-SKY = [(20, 21, 38), (24, 24, 45), (29, 28, 53), (35, 32, 62), (42, 36, 70)]
-FLOOR_TOP = (74, 62, 104)
-FLOOR = (48, 41, 74)
-FLOOR_DARK = (36, 31, 57)
-WHITE = (246, 242, 233)
-MUTED = (160, 154, 190)
-DIM = (104, 99, 138)
+WHITE = (250, 247, 240)
 YELLOW = (255, 210, 64)
-ACCENT = {'claude': (240, 128, 64), 'gpt': (232, 232, 232), 'deepseek': (64, 140, 255), 'clawd': (217, 119, 87)}
+YELLOW_EDGE = (176, 128, 20)
+ACCENT = {'claude': (240, 128, 64), 'gpt': (226, 226, 230), 'deepseek': (72, 146, 255), 'clawd': (217, 119, 87)}
 NAMES = {'claude': 'Claude', 'gpt': 'GPT', 'deepseek': 'DeepSeek', 'clawd': 'Clawd'}
 CHARACTERS = ['claude', 'gpt', 'deepseek', 'clawd']
 
@@ -41,6 +40,52 @@ _packs = {c: json.load(open(os.path.join(ROOT, 'assets', c, 'manifest.json'))) f
 
 
 # ---------------------------------------------------------------- sources
+
+def _near(x, y, tol=30):
+    return (x[..., 3] == y[..., 3]) & (np.abs(x[..., :3] - y[..., :3]).sum(-1) <= tol)
+
+
+def _specks(mask, art):
+    """Pixels of `mask` with at most two art pixels' worth of company in a 3x3 art-pixel window."""
+    k = 3 * art
+    r = k // 2
+    m = np.pad(mask.astype(np.int32), ((r, k - 1 - r), (r, k - 1 - r)))
+    c = np.zeros((m.shape[0] + 1, m.shape[1] + 1), np.int32)
+    c[1:, 1:] = m.cumsum(0).cumsum(1)
+    count = c[k:, k:] - c[:-k, k:] - c[k:, :-k] + c[:-k, :-k]
+    return mask & (count <= 2 * art * art)
+
+
+def steady(frames, art):
+    """Remove the shimmer the video-to-pixel conversion left in the clips.
+
+    `art` is the screen size of one art pixel. Three passes per frame, each one
+    restoring the previous frame's pixel:
+    - a one-frame blip whose neighbours agree exactly;
+    - colour jitter, a pixel that moved by only a few levels;
+    - an isolated speck that leaves and comes back within three frames.
+    Real motion (an eye blink, a prop) changes a connected area and is kept.
+    """
+    out = np.stack([np.asarray(f) for f in frames]).astype(np.int16)
+    n = len(out)
+    for i in range(1, n):
+        prev, cur = out[i - 1], out[i]
+        if i + 1 < n:
+            blip = (prev == out[i + 1]).all(-1) & (cur != prev).any(-1)
+            cur[blip] = prev[blip]
+        jitter = _near(cur, prev) & (cur != prev).any(-1)
+        cur[jitter] = prev[jitter]
+        for span in (1, 2, 3):
+            if i + span >= n:
+                break
+            moved = np.zeros(prev.shape[:2], bool)
+            for k in range(span):
+                moved |= ~_near(out[i + k], prev)
+            speck = _specks(_near(prev, out[i + span]) & moved, art)
+            for k in range(span):
+                out[i + k][speck] = prev[speck]
+    return tuple(Image.fromarray(f.astype(np.uint8)) for f in out)
+
 
 @lru_cache(maxsize=None)
 def clip(character, action, size=320, pixel=False):
@@ -57,7 +102,7 @@ def clip(character, action, size=320, pixel=False):
             for k in range(min(v['chunkFrames'], v['frames'] - i * v['chunkFrames'])):
                 x, y = k % v['columns'] * v['width'], k // v['columns'] * v['height']
                 frames.append(sheet.crop((x, y, x + v['width'], y + v['height'])))
-        return tuple(frames), v['fps']
+        return steady(frames, size // 80), v['fps']
     a = _packs[character]['animations'][action]
     sheet = Image.open(os.path.join(ROOT, 'assets', character, a['file'])).convert('RGBA')
     scale = size // a['height']
@@ -65,13 +110,12 @@ def clip(character, action, size=320, pixel=False):
     for n in range(a['frames']):
         x, y = n % a['columns'] * a['width'], n // a['columns'] * a['height']
         frames.append(sheet.crop((x, y, x + a['width'], y + a['height'])).resize((a['width'] * scale, a['height'] * scale), Image.NEAREST))
-    return tuple(frames), a['fps']
+    return steady(frames, scale), a['fps']
 
 
-def frame_at(character, action, t, size=320, loop=True, pixel=False):
+def frame_at(character, action, t, size=320, pixel=False):
     frames, fps = clip(character, action, size, pixel)
-    n = int(t * fps + 1e-6)
-    return frames[n % len(frames)] if loop else frames[min(n, len(frames) - 1)]
+    return frames[int(t * fps + 1e-6) % len(frames)]
 
 
 def place(img, f, cx, feet, character, size):
@@ -106,13 +150,12 @@ def _font():
 def glyphs(text):
     """1-bit mask of `text` at the font's native 12 px."""
     f = _font()
-    left, top, right, bottom = f.getbbox(text)
-    w, h = max(1, right), 13
-    im = Image.new('L', (w + 1, h), 0)
+    w = max(1, f.getbbox(text)[2])
+    im = Image.new('L', (w + 1, 13), 0)
     d = ImageDraw.Draw(im)
     d.fontmode = '1'
     d.text((0, -1), text, font=f, fill=255)
-    return im.crop((0, 0, w, h))
+    return im.crop((0, 0, w, 13))
 
 
 def text_size(text, scale):
@@ -120,17 +163,19 @@ def text_size(text, scale):
     return m.width * scale, m.height * scale
 
 
-def draw_text(img, xy, text, scale, color, shadow=None, anchor='l'):
+def draw_text(img, xy, text, scale, color, outline=None, anchor='l'):
+    """Pixel text; `outline` draws a one-text-pixel rim so it reads on any background."""
     m = glyphs(text)
     w, h = m.width * scale, m.height * scale
     x, y = xy
-    if anchor == 'c':
-        x -= w // 2
-    elif anchor == 'r':
-        x -= w
+    x -= {'l': 0, 'c': w // 2, 'r': w}[anchor]
     big = m.resize((w, h), Image.NEAREST)
-    if shadow:
-        img.paste(Image.new('RGBA', (w, h), shadow + (255,)), (x + scale, y + scale), big)
+    if outline:
+        rim = Image.new('RGBA', (w, h), outline + (255,))
+        for dx in (-scale, 0, scale):
+            for dy in (-scale, 0, scale):
+                if dx or dy:
+                    img.paste(rim, (x + dx, y + dy), big)
     img.paste(Image.new('RGBA', (w, h), color + (255,)), (x, y), big)
     return w, h
 
@@ -138,15 +183,17 @@ def draw_text(img, xy, text, scale, color, shadow=None, anchor='l'):
 # ---------------------------------------------------------------- pixel shapes
 
 def pixel_rect(img, box, fill, s, radius=2, border=None):
-    """Rectangle with stepped pixel corners on an s-pixel grid."""
+    """Rectangle with stepped pixel corners on an s-pixel grid; `border` adds a one-unit rim."""
     x0, y0, x1, y1 = box
     d = ImageDraw.Draw(img)
-    steps = [radius - i for i in range(radius)]  # inset per row from the corner
+
     def body(col, inset):
-        for r, k in enumerate(steps):
+        for r in range(radius):
+            k = radius - r
             d.rectangle((x0 + (k + inset) * s, y0 + (r + inset) * s, x1 - (k + inset) * s - 1, y0 + (r + inset + 1) * s - 1), col)
             d.rectangle((x0 + (k + inset) * s, y1 - (r + inset + 1) * s, x1 - (k + inset) * s - 1, y1 - (r + inset) * s - 1), col)
         d.rectangle((x0 + inset * s, y0 + (radius + inset) * s, x1 - inset * s - 1, y1 - (radius + inset) * s - 1), col)
+
     if border:
         body(border, 0)
         body(fill, 1)
@@ -154,79 +201,29 @@ def pixel_rect(img, box, fill, s, radius=2, border=None):
         body(fill, 0)
 
 
-def bubble(img, cx, bottom, text, s, fill=WHITE, ink=INK):
+def pill(img, cx, top, text, s, fill, ink=INK, scale=None, pad=(5, 2)):
+    """Outlined label; returns its box."""
+    scale = scale or s
+    tw, th = text_size(text, scale)
+    w, h = tw + 2 * pad[0] * s + 2 * s, th + 2 * pad[1] * s + 2 * s
+    x0 = cx - w // 2
+    pixel_rect(img, (x0, top, x0 + w, top + h), fill, s, radius=2, border=INK)
+    draw_text(img, (cx, top + s + pad[1] * s + s // 2), text, scale, ink, anchor='c')
+    return x0, top, x0 + w, top + h
+
+
+def bubble(img, cx, bottom, text, s):
+    """White speech bubble with an ink rim and a tail pointing down at x=cx; its tail tip sits on `bottom`."""
     tw, th = text_size(text, s)
-    pad_x, pad_y = 5 * s, 3 * s
-    w, h = tw + 2 * pad_x, th + 2 * pad_y
-    x0, y0 = cx - w // 2, bottom - h - 3 * s
-    pixel_rect(img, (x0, y0, x0 + w, y0 + h), fill, s, radius=2)
+    w, h = tw + 12 * s, th + 8 * s
+    x0, y0 = cx - w // 2, bottom - h - 4 * s
     d = ImageDraw.Draw(img)
-    for i in range(3):  # tail
-        d.rectangle((cx - (2 - i) * s, y0 + h + i * s, cx + s - 1, y0 + h + (i + 1) * s - 1), fill)
-    draw_text(img, (cx, y0 + pad_y), text, s, ink, anchor='c')
-
-
-def sky(w, h, s, bands=SKY):
-    """Vertical banded gradient with a one-row checker dither between bands."""
-    img = Image.new('RGBA', (w, h), bands[0] + (255,))
-    d = ImageDraw.Draw(img)
-    band = h / len(bands)
-    for i, col in enumerate(bands):
-        y0 = int(i * band) // s * s
-        d.rectangle((0, y0, w, h), col)
-        if i:
-            prev = bands[i - 1]
-            for x in range(0, w, s):
-                if (x // s) % 2:
-                    d.rectangle((x, y0, x + s - 1, y0 + s - 1), prev)
-            for x in range(0, w, 2 * s):
-                d.rectangle((x, y0 - s, x + s - 1, y0 - 1), col)
-    return img
-
-
-def stars(img, t, s, seed=7, count=60, top=0, bottom=None, color=WHITE, avoid=()):
-    import random
-    rng = random.Random(seed)
-    w, h = img.size
-    bottom = bottom or h
-    d = ImageDraw.Draw(img)
-    for i in range(count):
-        x = rng.randrange(0, w // s) * s
-        y = rng.randrange(top // s, bottom // s) * s
-        if any(ax0 - 6 * s <= x <= ax1 + 6 * s and ay0 - 4 * s <= y <= ay1 + 4 * s for ax0, ay0, ax1, ay1 in avoid):
-            continue
-        phase = rng.random()
-        period = rng.choice([1.6, 2.0, 2.4, 3.2])
-        on = ((t / period + phase) % 1.0) < 0.82
-        big = i % 9 == 0
-        c = color if on else DIM
-        if big and on:
-            d.rectangle((x, y - s, x + s - 1, y + 2 * s - 1), c)
-            d.rectangle((x - s, y, x + 2 * s - 1, y + s - 1), c)
-        else:
-            dim = tuple(int(v * (0.45 if i % 3 else 0.75)) for v in c)
-            d.rectangle((x, y, x + s - 1, y + s - 1), dim)
-
-
-def floor(img, y, s):
-    """A desk edge: bright lip, shaded face, then low-contrast tiles."""
-    w, h = img.size
-    d = ImageDraw.Draw(img)
-    d.rectangle((0, y, w, h), FLOOR)
-    d.rectangle((0, y, w, y + s - 1), FLOOR_TOP)
-    d.rectangle((0, y + s, w, y + 3 * s - 1), FLOOR_DARK)
-    row, tile = 6 * s, 24 * s
-    for k, ty in enumerate(range(y + 3 * s + row, h, row)):
-        d.rectangle((0, ty, w, ty + s - 1), FLOOR_DARK)
-        for x in range((k % 2) * tile // 2, w, tile):
-            d.rectangle((x, ty - row + s, x + s - 1, ty - 1), FLOOR_DARK)
-
-
-def shadow(img, cx, y, half, s, col=(30, 26, 48)):
-    d = ImageDraw.Draw(img)
-    d.rectangle((cx - half + 2 * s, y, cx + half - 2 * s, y + s - 1), col)
-    d.rectangle((cx - half, y + s, cx + half, y + 2 * s - 1), col)
-    d.rectangle((cx - half + 3 * s, y + 2 * s, cx + half - 3 * s, y + 3 * s - 1), col)
+    for i in range(4):  # tail rim, then fill
+        d.rectangle((cx - (3 - i) * s, y0 + h - s + i * s, cx + 2 * s - 1, y0 + h + i * s - 1), INK)
+    pixel_rect(img, (x0, y0, x0 + w, y0 + h), WHITE, s, radius=2, border=INK)
+    for i in range(3):
+        d.rectangle((cx - (2 - i) * s, y0 + h - s + i * s, cx + s - 1, y0 + h + i * s - 1), WHITE)
+    draw_text(img, (cx, y0 + 4 * s), text, s, INK, anchor='c')
 
 
 def pixel_logo(px=24, scale=4):
@@ -240,27 +237,66 @@ def pixel_logo(px=24, scale=4):
     return out
 
 
+def canvas(w, h):
+    return Image.new('RGBA', (w, h), (0, 0, 0, 0))
+
+
 # ---------------------------------------------------------------- output
 
 def save_anim(frames, name, ms):
+    """Animated GIF with one global palette and 1-bit transparency.
+
+    The art is hard-edged pixel work with binary alpha, so GIF loses nothing, and a
+    single palette shared by every frame keeps colours from shifting between frames.
+    gifsicle, when installed, shrinks the file losslessly; the result is decoded
+    again and must match the drawn frames pixel for pixel.
+    """
     path = os.path.join(OUT, name)
-    n = len(frames)
-    frames[0].save(path, save_all=True, append_images=frames[1:], duration=ms, loop=0,
-                   lossless=True, quality=100, method=4, kmin=n - 1, kmax=n)
-    print(f'{name}: {n} frames, {frames[0].size[0]}x{frames[0].size[1]}, {os.path.getsize(path) / 1024 / 1024:.2f} MiB')
-
-
-def backdrop(w, h, s, ground=None):
-    img = sky(w, h, s)
-    if ground is not None:
-        floor(img, ground, s)
-    return img
-
-
-def card_mask(w, h, s, radius=3):
-    mask = Image.new('L', (w, h), 0)
-    pixel_rect(mask, (0, 0, w, h), 255, s, radius=radius)
-    return mask
+    durations = list(ms) if isinstance(ms, list) else [ms] * len(frames)
+    sample = frames[:: max(1, len(frames) // 24)] + [frames[-1]]
+    opaque = np.concatenate([np.asarray(f)[..., :3][np.asarray(f)[..., 3] > 0] for f in sample])
+    colours = np.unique(opaque, axis=0)
+    if len(colours) <= 255:
+        lut = colours
+    else:
+        strip = Image.fromarray(opaque.reshape(1, -1, 3))
+        lut = np.asarray(strip.quantize(255, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).getpalette()[:255 * 3], dtype=np.uint8).reshape(-1, 3)
+    pal = Image.new('P', (1, 1))
+    pal.putpalette(list(lut.reshape(-1)) + [0, 0, 0] * (256 - len(lut)))
+    indexed, times = [], []
+    for f, d in zip(frames, durations):
+        p = np.asarray(f.convert('RGB').quantize(palette=pal, dither=Image.Dither.NONE)).copy()
+        p[np.asarray(f)[..., 3] == 0] = 255
+        if indexed and np.array_equal(p, indexed[-1]):
+            times[-1] += d  # a held pose is one frame shown longer
+            continue
+        indexed.append(p)
+        times.append(d)
+    out = []
+    for p in indexed:
+        im = Image.fromarray(p, 'P')
+        im.putpalette(pal.getpalette())
+        out.append(im)
+    # GIF delays are centiseconds; carry the rounding forward so long clips keep their timing.
+    delays, clock = [], 0.0
+    for d in times:
+        target = round((clock + d) / 10) * 10 - round(clock / 10) * 10
+        delays.append(max(20, target))
+        clock += d
+    out[0].save(path, save_all=True, append_images=out[1:], duration=delays, loop=0, transparency=255, disposal=2, optimize=False)
+    if shutil.which('gifsicle'):
+        subprocess.run(['gifsicle', '-O3', '--no-warnings', '-b', path], check=True)
+    check = Image.open(path)
+    if check.n_frames != len(indexed):
+        raise SystemExit(f'{name}: {check.n_frames} frames decoded, {len(indexed)} drawn')
+    rgb = np.asarray(pal.getpalette(), dtype=np.uint8).reshape(-1, 3)
+    for i, p in enumerate(indexed):
+        check.seek(i)
+        got = np.asarray(check.convert('RGBA'))
+        show = p != 255
+        if not np.array_equal(got[..., 3] > 0, show) or not np.array_equal(got[..., :3][show], rgb[p[show]]):
+            raise SystemExit(f'{name}: frame {i} decodes differently')
+    print(f'{name}: {len(frames)} frames ({len(indexed)} distinct), {frames[0].size[0]}x{frames[0].size[1]}, {len(lut)} colours, {os.path.getsize(path) / 1024 / 1024:.2f} MiB')
 
 
 # ---------------------------------------------------------------- hero
@@ -272,60 +308,52 @@ HERO_LINES = {
     'deepseek': ('idle', 'empty', '饭呢……'),
     'clawd': ('LookingAroundEyesOnly', 'Waving', '嗨！'),
 }
+HERO_TITLE = '会跟着 AI 干活的像素小同事'
 
 
-def hero_layers(s=4, w=1280, h=680):
-    """Static backdrop of the hero, rendered once."""
-    img = sky(w, h, s)
-    head, sub = '会跟着 AI 干活的像素小同事', 'Codex · DeepSeek Harness · macOS · Windows'
-    hw, hh = text_size(head, 5)
-    sw, sh = text_size(sub, 3)
+def hero_layers(s=4, w=1280, h=560, title_y=24):
+    base = canvas(w, h)
     logo = pixel_logo(24, 3)
-    ground = h - 88
-    floor(img, ground, s)
-    img.alpha_composite(logo, (8 * s, 7 * s))
-    draw_text(img, (8 * s + logo.width + 4 * s, 7 * s + 1 * s), '抱抱龙', 3, WHITE)
-    draw_text(img, (8 * s + logo.width + 4 * s, 7 * s + 11 * s), 'PIXEL AGENT PETS', 2, MUTED)
-    draw_text(img, (w // 2, 38 * s), head, 5, WHITE, shadow=INK, anchor='c')
-    draw_text(img, (w // 2, 58 * s), sub, 3, MUTED, anchor='c')
+    tw, th = text_size(HERO_TITLE, 5)
+    x = (w - (logo.width + 6 * s + tw)) // 2
+    base.alpha_composite(logo, (x, title_y))
+    draw_text(base, (x + logo.width + 6 * s, title_y + (logo.height - th) // 2), HERO_TITLE, 5, YELLOW, outline=INK)
+    ground = h - 64
     xs = [w // 2 + int((i - 1.5) * 290) for i in range(4)]
     for c, cx in zip(CHARACTERS, xs):
-        shadow(img, cx, ground, 20 * s if c != 'clawd' else 16 * s, s)
-        draw_text(img, (cx, ground + 6 * s), NAMES[c], 3, ACCENT[c], shadow=INK, anchor='c')
-    avoid = [(w // 2 - hw // 2, 38 * s, w // 2 + hw // 2, 38 * s + hh), (w // 2 - sw // 2, 58 * s, w // 2 + sw // 2, 58 * s + sh),
-             (8 * s, 7 * s, 8 * s + logo.width + 60 * s, 7 * s + logo.height)]
-    return img, card_mask(w, h, s), avoid, ground, xs
+        pill(base, cx, ground + 4 * s, NAMES[c], s, ACCENT[c], scale=2, pad=(4, 1))
+    return base, ground, xs
 
 
-def hero_frame(t, period, layers, s=4):
-    base, mask, avoid, ground, xs = layers
+def hero_frame(t, period, layers):
+    base, ground, xs = layers
     img = base.copy()
-    stars(img, t, s, count=70, bottom=ground - 230, avoid=avoid)
     turn = period / 4
     slot = int(t / turn) % 4
     for i, c in enumerate(CHARACTERS):
         idle, act, line = HERO_LINES[c]
         f = frame_at(c, act, t - slot * turn, 320) if i == slot else frame_at(c, idle, t, 320)
-        place(img, f, xs[i], ground - 2, c, 320)
-        if i == slot:
-            bubble(img, xs[i], ground - 270 + (52 if c != 'clawd' else 168), line, 3)
-    img.putalpha(mask)
+        place(img, f, xs[i], ground, c, 320)
+    c = CHARACTERS[slot]
+    bubble(img, xs[slot], ground - 268 + (56 if c != 'clawd' else 168), HERO_LINES[c][2], 3)
     return img
 
 
-def build_hero(fps=20, period=8.0):
+def build_hero(fps=10, period=8.0):
     layers = hero_layers()
-    save_anim([hero_frame(n / fps, period, layers) for n in range(int(period * fps))], 'hero.webp', 1000 // fps)
+    save_anim([hero_frame(n / fps, period, layers) for n in range(int(period * fps))], 'hero.gif', 1000 // fps)
 
 
 def build_cover():
     """Static 1280x640 social card (also the site's og:image)."""
-    img, _, avoid, ground, xs = hero_layers(h=640)
-    stars(img, 0.0, 4, count=70, bottom=ground - 230, avoid=avoid)
+    w, h = 1280, 640
+    img = Image.new('RGBA', (w, h), WHITE + (255,))
+    base, ground, xs = hero_layers(h=h - 40, title_y=96)
+    img.alpha_composite(base, (0, 0))
     for c, cx in zip(CHARACTERS, xs):
         idle = HERO_LINES[c][0]
         frames, _ = clip(c, idle, 320)
-        place(img, frames[_packs[c]['animations'][idle].get('poster', 0)], cx, ground - 2, c, 320)
+        place(img, frames[_packs[c]['animations'][idle].get('poster', 0)], cx, ground, c, 320)
     img.convert('RGB').save(os.path.join(OUT, 'cover.png'), optimize=True)
     print('cover.png')
 
@@ -342,63 +370,44 @@ WORK_STATES = [
 ]
 
 
-def build_work(fps=10, step=4 / 6):
+def build_work(fps=10, period=4.0):
     # 4 s is one full loop of every HD clip, so the matrix repeats seamlessly.
-    s, cell, row, pad, head = 2, 168, 172, 28, 64
-    cols = len(WORK_STATES)
-    w, h = pad * 2 + cols * cell, head + pad + 4 * row + 8
-    base = backdrop(w, h, s)
-    d = ImageDraw.Draw(base)
-    for r in range(4):  # one desk edge per character row
-        y = head + pad + r * row + 140
-        d.rectangle((pad, y, w - pad - 1, y + s - 1), FLOOR_TOP)
-        d.rectangle((pad, y + s, w - pad - 1, y + 3 * s - 1), FLOOR_DARK)
-    mask = card_mask(w, h, s, radius=4)
-    period = cols * step
+    s, cell, row, head = 2, 168, 160, 64
+    w, h = len(WORK_STATES) * cell, head + 4 * row
+    base = canvas(w, h)
+    for i, (label, _) in enumerate(WORK_STATES):
+        pill(base, i * cell + cell // 2, 4, label, s, YELLOW, scale=3, pad=(6, 1))
     frames = []
     for n in range(int(period * fps)):
         t = n / fps
-        active = int(t / step) % cols
         img = base.copy()
-        x0 = pad + active * cell
-        pixel_rect(img, (x0 + 2 * s, 14, x0 + cell - 2 * s, h - 14), (40, 38, 70), s, radius=3, border=(255, 210, 64))
-        pixel_rect(img, (x0 + 2 * s + 2 * s, 14 + 2 * s, x0 + cell - 4 * s, h - 14 - 2 * s), SKY[2], s, radius=2)
-        for i, (label, cast) in enumerate(WORK_STATES):
-            cx = pad + i * cell + cell // 2
-            draw_text(img, (cx, 22), label, 3, YELLOW if i == active else MUTED, anchor='c')
+        for i, (_, cast) in enumerate(WORK_STATES):
+            cx = i * cell + cell // 2
             for r, c in enumerate(CHARACTERS):
                 size = 240 if c == 'clawd' else 160
-                place(img, frame_at(c, cast[c], t + phase(c, cast[c], i + r), size), cx, head + pad + r * row + 140, c, size)
-        img.putalpha(mask)
+                place(img, frame_at(c, cast[c], t + phase(c, cast[c], i + r), size), cx, head + r * row + 146, c, size)
         frames.append(img)
-    save_anim(frames, 'work.webp', 1000 // fps)
+    save_anim(frames, 'work.gif', 1000 // fps)
 
 
 # ---------------------------------------------------------------- wall: every action
 
 def build_wall(fps=10, period=4.0):
-    s, cell, cols, pad = 2, 136, 11, 20
+    cell, cols = 136, 11
     items = [(c, a) for c in CHARACTERS for a in actions(c)]
     rows = -(-len(items) // cols)
-    w, h = pad * 2 + cols * cell, pad * 2 + rows * cell
-    base = backdrop(w, h, s)
-    d = ImageDraw.Draw(base)
-    for k, (c, a) in enumerate(items):  # a coloured tick under each slot says whose action it is
-        x, y = pad + k % cols * cell, pad + k // cols * cell
-        d.rectangle((x + cell // 2 - 12, y + cell - 10, x + cell // 2 + 11, y + cell - 10 + s - 1), ACCENT[c])
-    mask = card_mask(w, h, s, radius=4)
+    w, h = cols * cell, rows * cell
     frames = []
     for n in range(int(period * fps)):
         t = n / fps
-        img = base.copy()
+        img = canvas(w, h)
         for k, (c, a) in enumerate(items):
-            x, y = pad + k % cols * cell, pad + k // cols * cell
+            x, y = k % cols * cell, k // cols * cell
             # Shown at about half size on GitHub, where the 80 px atlas looks the same as HD at a third of the weight.
             size = 240 if c == 'clawd' else 160
-            place(img, frame_at(c, a, t + phase(c, a, k), size, pixel=True), x + cell // 2, y + 118, c, size)
-        img.putalpha(mask)
+            place(img, frame_at(c, a, t + phase(c, a, k), size, pixel=True), x + cell // 2, y + 126, c, size)
         frames.append(img)
-    save_anim(frames, 'wall.webp', 1000 // fps)
+    save_anim(frames, 'wall.gif', 1000 // fps)
     print(f'wall: {len(items)} actions')
 
 
@@ -412,47 +421,34 @@ STORIES = {
 }
 
 
-def story_caption(c, action, step_caption, local):
+def story_caption(c, action, step_caption, local, held):
+    """The step's line, else the clip's latest caption so far; a bubble never blinks off between lines."""
     if step_caption:
         return step_caption
     for item in _packs[c]['animations'][action].get('captions', []):
-        if item['start'] <= local < item['end']:
-            return item['text']
-    return ''
-
-
-STORY_LINES = {
-    'claude': '中文？→ 中国人？→ 封禁',
-    'gpt': '探针 → 门禁 → 冒烟 → 验收矩阵 → 开工',
-    'deepseek': '没饭 → 讨饭 → 吃饭 → 偷饭 → 晕碳',
-    'clawd': 'Claude Desktop 原版 · 25 套动作',
-}
+        if item['start'] <= local:
+            held = item['text']
+    return held
 
 
 def build_story(c):
-    s, w, h = 4, 560, 520
-    ground = h - 120
-    base = backdrop(w, h, s, ground)
-    ImageDraw.Draw(base).rectangle((0, ground + 3 * s, w, h), (30, 27, 50))
-    shadow(base, w // 2, ground, 20 * s if c != 'clawd' else 16 * s, s)
-    draw_text(base, (8 * s, ground + 7 * s), NAMES[c], 3, ACCENT[c], shadow=INK)
-    draw_text(base, (8 * s, ground + 18 * s), STORY_LINES[c], 2, MUTED)
-    mask = card_mask(w, h, s)
-    frames, durations = [], []
+    s, w, h = 4, 560, 480
+    feet = h - 60
+    base = canvas(w, h)
+    pill(base, w // 2, feet + 4 * s, NAMES[c], s, ACCENT[c], scale=2, pad=(4, 1))
+    frames, durations, held = [], [], ''
     for action, caption in STORIES[c]:
         size = 400 if c == 'clawd' else 320
         clip_frames, fps = clip(c, action, size)
         for n, f in enumerate(clip_frames):
             img = base.copy()
-            place(img, f, w // 2, ground - 2, c, size)
-            text = story_caption(c, action, caption, n / fps)
-            if text:
-                bubble(img, w // 2, 96, text, 3)
-            img.putalpha(mask)
+            place(img, f, w // 2, feet, c, size)
+            held = story_caption(c, action, caption, n / fps, held)
+            if held:
+                bubble(img, w // 2, 100, held, 3)
             frames.append(img)
-            durations.append(round(1000 / fps))
-    path = f'story-{c}.webp'
-    save_anim(frames, path, durations)
+            durations.append(1000 / fps)
+    save_anim(frames, f'story-{c}.gif', durations)
 
 
 def build_stories():
@@ -471,8 +467,8 @@ def button(label, icon, name, s=3):
     iw, ih = len(icon[0]) * s, len(icon) * s
     pad, gap = 9 * s, 4 * s
     w, h = tw + iw + gap + 2 * pad, th + 2 * 6 * s
-    img = Image.new('RGBA', (w, h + 2 * s), (0, 0, 0, 0))
-    pixel_rect(img, (0, 2 * s, w, h + 2 * s), (176, 128, 20), s, radius=2)
+    img = canvas(w, h + 2 * s)
+    pixel_rect(img, (0, 2 * s, w, h + 2 * s), YELLOW_EDGE, s, radius=2)
     pixel_rect(img, (0, 0, w, h), YELLOW, s, radius=2)
     d = ImageDraw.Draw(img)
     ix, iy = pad, (h - ih) // 2
