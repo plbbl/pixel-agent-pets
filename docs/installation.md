@@ -36,7 +36,7 @@ curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install
 curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- --dsh
 ```
 
-安装器发现已有网页 profile：单个自动选择，多个询问。终端 TUI profile 无法显示网页插件；没有网页 profile 时先用官方 DSH 启动一次。安装后重新打开所选网页窗口，右键宠物调整角色、大小和清晰度，或预览完整动作。
+安装器发现已有网页 profile：单个自动选择，多个询问。终端 TUI profile 无法显示网页插件；没有网页 profile 时先用官方 DSH 启动一次。安装后重新打开所选网页窗口，右键宠物调整角色、大小和清晰度，或预览完整动作。宠物默认贴着输入框；按住拖动可移动到页面其他位置，右键「重置位置 · 跟随输入框」可重新绑定。自由位置自动保存在当前浏览器，调整窗口或放大宠物时保持可见。
 
 DSH 保留全部 66 套动作与细分状态触发，包括本地剧情字幕。自动清晰度随大小与屏幕精度选择 80／160／320px 源；Clawd 保留原始像素。调整显示不会重启当前动作。实际网页显示已核验于官方 **0.1.0-rc.6 web 客户端**。
 

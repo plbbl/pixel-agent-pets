@@ -68,3 +68,5 @@ Development uses `git clone`, `npm ci`, `npm run build`, `npm run check` and `np
 </details>
 
 Code is MIT. The Baobaolong logo, original Clawd, third-party artwork and trademarks are excluded; see [NOTICE](../NOTICE.md).
+
+In DSH, the pet follows the composer by default. Drag it to keep a free position; right-click “重置位置 · 跟随输入框” to bind it to the composer again. Position survives reload and session switches; dragging does not restart playback.

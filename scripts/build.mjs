@@ -16,7 +16,7 @@ export async function buildAll({codexQuality='auto'}={}){
   if(character!=='clawd')await exportCodex(root,character,{...packs[character],name:name+' · 80px 像素版'},{quality:'pixel',outputFolder:'codex-pixel'});
  }
  await fs.mkdir(path.join(root,'.generated'),{recursive:true});await fs.writeFile(path.join(root,'.generated','packs.json'),JSON.stringify(packs));await fs.mkdir(path.join(root,'dist'),{recursive:true});
- const result=await build({absWorkingDir:root,entryPoints:['src/client.tsx'],bundle:true,write:false,format:'cjs',platform:'browser',target:'es2022',jsx:'automatic',external:['react','react/jsx-runtime'],minify:true});
+ const result=await build({absWorkingDir:root,entryPoints:['src/client.tsx'],bundle:true,write:false,format:'cjs',platform:'browser',target:'es2022',jsx:'automatic',external:['react','react-dom','react/jsx-runtime'],minify:true});
  await fs.writeFile(path.join(root,'dist/client.js'),`window.__ModuleLoader__.load({id:"dsh-pixel-agent-pets",factory:(require)=>{var module={exports:{}};var exports=module.exports;\n${result.outputFiles[0].text}\nreturn module.exports;}});\n`);
  await build({absWorkingDir:root,entryPoints:['src/index.ts'],outfile:'dist/index.js',format:'esm',platform:'node',target:'node20'});
  await build({absWorkingDir:root,entryPoints:['src/preview.tsx'],outfile:'dist/preview.js',bundle:true,format:'esm',platform:'browser',jsx:'automatic',target:'es2022',minify:true});
