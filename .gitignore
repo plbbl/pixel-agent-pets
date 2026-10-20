@@ -7,6 +7,7 @@ dist/
 
 site/gallery.js
 site/assets/
+site/assets-hd/
 site/media/
 showcase/**/*.building.mp4
 __pycache__/

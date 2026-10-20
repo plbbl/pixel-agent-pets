@@ -1,30 +1,17 @@
 #!/usr/bin/env node
-import fs from'node:fs/promises';import path from'node:path';import{fileURLToPath}from'node:url';
-import{installCodex,uninstallCodex,installDSH,uninstallDSH,homes,exists,profileDirectory,characterIDs,packageName,installFullCompanion,uninstallFullCompanion}from'./install-lib.mjs';
-const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),args=process.argv.slice(2),command=args[0]??'help';
-const value=key=>{const i=args.indexOf(key);if(i<0)return undefined;const v=args[i+1];if(!v||v.startsWith('--'))throw Error(key+' requires a value');return v;};
-async function main(){
- const h=homes(),profile=value('--profile')??'web';profileDirectory(h.dsh,profile);
- if(command==='install'&&args.includes('--codex-full')){console.log(JSON.stringify(await installFullCompanion(root),null,2));return;}
- if(command==='uninstall'&&args.includes('--codex-full')){console.log(JSON.stringify(await uninstallFullCompanion(),null,2));return;}
- if(command==='install'){
-  const {buildAll}=await import('./build.mjs');await buildAll({codexQuality:value('--quality')??'auto'});
-  const specific=args.includes('--codex')||args.includes('--dsh'),result={};
-  if(args.includes('--codex')||!specific)result.codex=await installCodex(root,h.codex,{qualityChoices:args.includes('--quality-choices')});
-  if(args.includes('--dsh')||!specific&&await exists(path.join(profileDirectory(h.dsh,profile),'package.json')))result.dsh=await installDSH(root,h.dsh,profile);
-  console.log(JSON.stringify(result,null,2));console.log('Codex: Settings → Mini & Pets (Mini 与虚拟宠物) → circular Refresh icon → select a pet. Older versions: Settings → Pets. DSH: reopen the selected profile.');return;
- }
- if(command==='uninstall'){
-  const specific=args.includes('--codex')||args.includes('--dsh'),result={};
-  if(args.includes('--codex')||!specific)result.codex=await uninstallCodex(h.codex);
-  if(args.includes('--dsh'))result.dsh=await uninstallDSH(h.dsh,profile);console.log(JSON.stringify(result,null,2));return;
- }
- if(command==='import-clawd'){const{importClawd}=await import('./import-clawd.mjs');console.log(await importClawd(value('--source')));return;}
- if(command==='doctor'){
-  const codex={};for(const c of characterIDs)codex[c]=await exists(path.join(h.codex,'pets','pixel-agent-'+c,'pet.json'));
-  let dsh;try{const p=JSON.parse(await fs.readFile(path.join(profileDirectory(h.dsh,profile),'package.json'),'utf8'));dsh={profile,enabled:p.dsh?.profile?.bundles?.includes(packageName)??false,linked:!!p.dependencies?.[packageName]};}catch{dsh={profile,installed:false};}
-  console.log(JSON.stringify({node:process.versions.node,codex,dsh},null,2));return;
- }
- console.log(`Pixel Agent Pets\n\nnode scripts/cli.mjs install [--codex-full] [--codex] [--dsh] [--profile web] [--quality auto|pixel|hd] [--quality-choices]\nnode scripts/cli.mjs uninstall --codex\nnode scripts/cli.mjs uninstall --dsh --profile web\nnode scripts/cli.mjs doctor [--profile web]\nnode scripts/cli.mjs import-clawd [--source path/to/app.asar]\n\nFour included pets. No API key or model request. No official app modification.`);
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {runEasyInstaller} from './easy-install.mjs';
+import {exists,packageName} from './install-lib.mjs';
+import {verifyInstallerPayload} from './installer-integrity.mjs';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+async function verifySourceOrRelease(){
+ if(await exists(path.join(root,'integrity.json')))return verifyInstallerPayload(root);
+ const pkg=JSON.parse(await fs.readFile(path.join(root,'package.json'),'utf8'));if(pkg.name!==packageName)throw Error('Invalid pet source package');
+ // Development checkout: each host installer still validates its built inputs.
+ const targets=[];if(await exists(path.join(root,'codex'))&&await exists(path.join(root,'codex-pixel')))targets.push('codex');if(await exists(path.join(root,'dist/client.js'))&&await exists(path.join(root,'assets-hd/manifest.json')))targets.push('dsh');
+ return{version:pkg.version,targets};
 }
-main().catch(e=>{console.error(e.message);process.exitCode=1;});
+export async function main(argv=process.argv.slice(2)){return runEasyInstaller(argv,{payloadRoot:root,operations:{verifyInstallerPayload:verifySourceOrRelease}});}
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(error=>{console.error(error.message);process.exitCode=1;});

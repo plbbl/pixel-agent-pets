@@ -1,12 +1,12 @@
 import React from 'react';
 import {Pet} from './pet';
-import {activityFromDSH} from './policy';
+import {activityFromDSH,activityWithDSHInput} from './policy';
 export const inject=['slots'];
 function Companion({useSession,useInput}:any){
  // Stable JSON scalar avoids rerendering the pet for every generated token.
  const facts=useSession((s:any)=>JSON.stringify(activityFromDSH(s)));
- const chinese=useInput((s:any)=>/[\u3400-\u9fff]/u.test(s.draft));
- return <Pet activity={{...JSON.parse(facts),chineseDraft:chinese}}/>;
+ const input=useInput((s:any)=>JSON.stringify({chineseDraft:/[\u3400-\u9fff]/u.test(s.draft),phase:s.phase,queued:(s.queue??[]).some((row:any)=>row.placement==='queued')}));
+ return <Pet activity={activityWithDSHInput(JSON.parse(facts),JSON.parse(input))}/>;
 }
 function HeroCompanion({useSessions}:any){
  const selected=useSessions((s:any)=>!!s.current);

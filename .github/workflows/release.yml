@@ -30,6 +30,7 @@ jobs:
           name: verified-installer
           path: |
             work/release/Pixel-Agent-Pets-Installer.tar.gz
+            work/release/Pixel-Agent-Pets-Codex.tar.gz
             work/release/SHA256SUMS
       - name: Publish verified package
         if: startsWith(github.ref, 'refs/tags/')
@@ -38,7 +39,7 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" work/release/Pixel-Agent-Pets-Installer.tar.gz work/release/SHA256SUMS install.sh --clobber
+            gh release upload "$RELEASE_TAG" work/release/*.tar.gz work/release/SHA256SUMS install.sh --clobber
           else
-            gh release create "$RELEASE_TAG" work/release/Pixel-Agent-Pets-Installer.tar.gz work/release/SHA256SUMS install.sh --verify-tag --generate-notes --title "抱抱龙 Pets $RELEASE_TAG · 一键安装"
+            gh release create "$RELEASE_TAG" work/release/*.tar.gz work/release/SHA256SUMS install.sh --verify-tag --generate-notes --title "抱抱龙 Pets $RELEASE_TAG · DSH 完整版与 Codex 兼容版"
           fi

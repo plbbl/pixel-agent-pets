@@ -1,4 +1,4 @@
-import fs from'node:fs/promises';import path from'node:path';import{fileURLToPath}from'node:url';import{build}from'esbuild';import{PNG}from'pngjs';import{exportCodex}from'./codex-export.mjs';import{buildCodexNative}from'./build-codex-native.mjs';
+import fs from'node:fs/promises';import path from'node:path';import{fileURLToPath}from'node:url';import{build}from'esbuild';import{PNG}from'pngjs';import{exportCodex}from'./codex-export.mjs';
 export const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 export async function buildAll({codexQuality='auto'}={}){
  const packs={};for(const character of ['claude','gpt','deepseek','clawd']){
@@ -20,7 +20,6 @@ export async function buildAll({codexQuality='auto'}={}){
  await fs.writeFile(path.join(root,'dist/client.js'),`window.__ModuleLoader__.load({id:"dsh-pixel-agent-pets",factory:(require)=>{var module={exports:{}};var exports=module.exports;\n${result.outputFiles[0].text}\nreturn module.exports;}});\n`);
  await build({absWorkingDir:root,entryPoints:['src/index.ts'],outfile:'dist/index.js',format:'esm',platform:'node',target:'node20'});
  await build({absWorkingDir:root,entryPoints:['src/preview.tsx'],outfile:'dist/preview.js',bundle:true,format:'esm',platform:'browser',jsx:'automatic',target:'es2022',minify:true});
- await buildCodexNative();
  console.log('Built: '+Object.keys(packs).join(', ')+'; Codex v1 sheets + DSH plugin.');return packs;
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))await buildAll();

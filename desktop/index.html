@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' ipc: http://ipc.localhost; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: http://asset.localhost; connect-src 'self' ipc: http://ipc.localhost; object-src 'none'; base-uri 'self'">
+  <title>抱抱龙桌宠</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <main id="stage" aria-label="抱抱龙桌宠">
+    <p id="caption" aria-live="polite" aria-atomic="true"></p>
+    <button id="actor" type="button" aria-label="像素 Claude，单击互动，双击完整演出，右键设置">
+      <canvas id="pet" aria-label="像素 Claude" role="img"></canvas>
+    </button>
+  </main>
+  <div id="menu" role="menu" aria-label="桌宠设置" hidden></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

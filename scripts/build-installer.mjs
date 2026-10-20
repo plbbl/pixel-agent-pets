@@ -15,6 +15,7 @@ const repository=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
 const characters=['claude','gpt','deepseek','clawd'];
 const packageName='dsh-pixel-agent-pets';
 export const installerArchiveName='Pixel-Agent-Pets-Installer.tar.gz';
+export const codexInstallerArchiveName='Pixel-Agent-Pets-Codex.tar.gz';
 const builtins=new Set([...builtinModules,...builtinModules.map(name=>'node:'+name)]);
 const sha256=bytes=>createHash('sha256').update(bytes).digest('hex');
 const json=async file=>JSON.parse(await fs.readFile(file,'utf8'));
@@ -31,7 +32,19 @@ async function pngSize(root,relative,width,height){
   if(bytesRead!==24||!header.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))||header.toString('ascii',12,16)!=='IHDR'||header.readUInt32BE(16)!==width||header.readUInt32BE(20)!==height)throw Error('Unexpected release PNG dimensions: '+relative);
  }finally{await handle.close();}
 }
-async function collectAssets(root){
+async function collectCatalogs(root){
+ const files=[];
+ for(const folder of ['codex','codex-pixel'])for(const character of characters){
+  if(folder==='codex-pixel'&&character==='clawd')continue;
+  const prefix=folder+'/'+character+'/',petPath=prefix+'pet.json';await regularFile(root,petPath);const pet=await json(path.join(root,petPath));
+  if(pet.spriteVersionNumber!==1||pet.spritesheetPath!=='spritesheet.png')throw Error('Invalid Codex compatibility catalog: '+prefix);
+  await pngSize(root,prefix+'spritesheet.png',1536,1872);
+  for(const file of ['pet.json','spritesheet.png','.pixel-agent-export.json']){await regularFile(root,prefix+file);files.push(prefix+file);}
+ }
+ return files;
+}
+async function collectAssets(root,{codexOnly=false}={}){
+ if(codexOnly)return{files:(await collectCatalogs(root)).sort(),animationCount:0,hdCount:0};
  const files=new Set(),base={};let animationCount=0;
  for(const character of characters){
   const relative='assets/'+character+'/manifest.json';await regularFile(root,relative);
@@ -62,13 +75,7 @@ async function collectAssets(root){
    hdCount++;
   }
  }
- for(const folder of ['codex','codex-pixel'])for(const character of characters){
-  if(folder==='codex-pixel'&&character==='clawd')continue;
-  const prefix=folder+'/'+character+'/',petPath=prefix+'pet.json';await regularFile(root,petPath);const pet=await json(path.join(root,petPath));
-  if(pet.spriteVersionNumber!==1||pet.spritesheetPath!=='spritesheet.png')throw Error('Invalid native pet catalog: '+prefix);
-  await pngSize(root,prefix+'spritesheet.png',1536,1872);
-  for(const file of ['pet.json','spritesheet.png','.pixel-agent-export.json']){await regularFile(root,prefix+file);files.add(prefix+file);}
- }
+ for(const file of await collectCatalogs(root))files.add(file);
  return{files:[...files].sort(),animationCount,hdCount};
 }
 function privatePath(bytes,root){
@@ -90,8 +97,8 @@ async function archivePayload(directory,file){
  }
  await pipeline(Readable.from(entries()),createGzip({level:6}),createWriteStream(file,{flags:'wx'}));
 }
-function runtimePackage(source){
- const allowed=['name','version','description','type','license','main','exports','repository','homepage','dsh','peerDependencies','peerDependenciesMeta'];
+function runtimePackage(source,{codexOnly=false}={}){
+ const allowed=['name','version','description','type','license','repository','homepage',...(codexOnly?[]:['main','exports','dsh','peerDependencies','peerDependenciesMeta'])];
  return Object.fromEntries([...allowed.filter(key=>source[key]!==undefined).map(key=>[key,source[key]]),['bin',{'pixel-pets':'./install.cjs'}],['engines',{node:'>=22'}]]);
 }
 async function bundledLicenses(root,stage,metafile){
@@ -113,21 +120,21 @@ async function bundledLicenses(root,stage,metafile){
  }
 }
 /** Build a downloadable, precompiled package; never invokes an installer or app operation. */
-export async function buildInstaller({root=repository,entryPoint=path.join(root,'scripts/easy-install.mjs'),outdir=path.join(root,'work/release'),archive=true,maxArchiveBytes=100*1024*1024}={}){
+export async function buildInstaller({root=repository,entryPoint=path.join(root,'scripts/easy-install.mjs'),outdir=path.join(root,'work/release'),archive=true,maxArchiveBytes=100*1024*1024,variant='full'}={}){
+ if(!['full','codex'].includes(variant))throw Error('Unknown installer variant');
+ const codexOnly=variant==='codex',archiveName=codexOnly?codexInstallerArchiveName:installerArchiveName;
  root=path.resolve(root);outdir=path.resolve(outdir);entryPoint=path.resolve(entryPoint);
  if(!entryPoint.startsWith(root+path.sep))throw Error('Installer entry must be inside its source package');
  await regularFile(root,path.relative(root,entryPoint).split(path.sep).join('/'));
  const sourcePackage=await json(path.join(root,'package.json'));if(sourcePackage.name!==packageName||typeof sourcePackage.version!=='string')throw Error('Unexpected release package');
- const assets=await collectAssets(root);await fs.mkdir(outdir,{recursive:true});const temporary=await fs.mkdtemp(path.join(outdir,'.pixel-agent-pets-stage-'));
+ const assets=await collectAssets(root,{codexOnly});await fs.mkdir(outdir,{recursive:true});const temporary=await fs.mkdtemp(path.join(outdir,'.pixel-agent-pets-stage-'));
  const destination=path.join(outdir,'pixel-agent-pets');let archiveTemporary;
  try{
-  const required=['dist/index.js','dist/client.js','dist/codex-native.js','scripts/hd-asset-route.mjs','cordis.patch.yml','LICENSE','NOTICE.md'];
+  const required=['LICENSE','NOTICE.md',...(codexOnly?[]:['dist/index.js','dist/client.js','scripts/hd-asset-route.mjs','cordis.patch.yml'])];
   for(const relative of [...required,...assets.files])await copy(root,temporary,relative);
-  await fs.writeFile(path.join(temporary,'package.json'),JSON.stringify(runtimePackage(sourcePackage),null,2)+'\n');
-  // The legacy standalone companion builder is deliberately excluded. It is
-  // tree-shaken when unused; a referenced external is rejected below instead
-  // of silently shipping an installer that needs developer dependencies.
-  const bundled=await build({absWorkingDir:root,entryPoints:[entryPoint],outfile:path.join(temporary,'install.cjs'),bundle:true,write:true,metafile:true,format:'cjs',platform:'node',target:'node22',minify:true,legalComments:'none',sourcemap:false,external:['./build-desktop.mjs'],alias:{'original-fs':'node:fs'},define:{'import.meta.url':'__pixelPetsInstallerURL'},banner:{js:'const __pixelPetsInstallerURL=require("node:url").pathToFileURL(__filename).href;'}});
+  await fs.writeFile(path.join(temporary,'package.json'),JSON.stringify(runtimePackage(sourcePackage,{codexOnly}),null,2)+'\n');
+  // Bundle the installer with no developer dependencies on the user's machine.
+  const bundled=await build({absWorkingDir:root,entryPoints:[entryPoint],outfile:path.join(temporary,'install.cjs'),bundle:true,write:true,metafile:true,format:'cjs',platform:'node',target:'node22',minify:true,legalComments:'none',sourcemap:false,define:{'import.meta.url':'__pixelPetsInstallerURL'},banner:{js:'const __pixelPetsInstallerURL=require("node:url").pathToFileURL(__filename).href;'}});
   for(const output of Object.values(bundled.metafile.outputs))for(const dependency of output.imports??[])if(dependency.external&&!builtins.has(dependency.path))throw Error('Release installer has an unbundled runtime dependency: '+dependency.path);
   await bundledLicenses(root,temporary,bundled.metafile);
   await fs.chmod(path.join(temporary,'install.cjs'),0o755);
@@ -135,7 +142,7 @@ export async function buildInstaller({root=repository,entryPoint=path.join(root,
    const data=await fs.readFile(path.join(temporary,relative));if(/\.(?:cjs|mjs|js|json|yml|md|txt)$/.test(relative)&&privatePath(data,root))throw Error('Private source path in release payload: '+relative);
    files.push({path:relative,size:data.length,sha256:sha256(data)});
   }
-  const manifest={version:1,package:packageName,packageVersion:sourcePackage.version,node:22,animations:assets.animationCount,hdAnimations:assets.hdCount,native:{module:'dist/codex-native.js',base:'assets',hd:'assets-hd',targetPrefix:'baobaolong-assets'},files};
+  const manifest={version:1,package:packageName,packageVersion:sourcePackage.version,node:22,targets:codexOnly?['codex']:['codex','dsh'],animations:assets.animationCount,hdAnimations:assets.hdCount,codex:{states:9,frames:57,catalogs:7},files};
   await fs.writeFile(path.join(temporary,'integrity.json'),JSON.stringify(manifest,null,2)+'\n');const verified=await verifyInstallerPayload(temporary);
   if(await exists(destination)){
    let prior;try{prior=await json(path.join(destination,'integrity.json'));}catch{}
@@ -145,15 +152,24 @@ export async function buildInstaller({root=repository,entryPoint=path.join(root,
   }else await fs.rename(temporary,destination);
   let archivePath=null,archiveSha256=null,archiveBytes=0;
   if(archive){
-   archivePath=path.join(outdir,installerArchiveName);archiveTemporary=path.join(outdir,'.'+installerArchiveName+'.'+process.pid+'.tmp');await archivePayload(destination,archiveTemporary);
+   archivePath=path.join(outdir,archiveName);archiveTemporary=path.join(outdir,'.'+archiveName+'.'+process.pid+'.tmp');await archivePayload(destination,archiveTemporary);
    archiveBytes=(await fs.stat(archiveTemporary)).size;if(archiveBytes>maxArchiveBytes)throw Error('Installer archive exceeds the release size limit');
    archiveSha256=sha256(await fs.readFile(archiveTemporary));await fs.rename(archiveTemporary,archivePath);archiveTemporary=undefined;
-   const checksums=path.join(outdir,'.SHA256SUMS.'+process.pid+'.tmp');await fs.writeFile(checksums,archiveSha256+'  '+installerArchiveName+'\n');await fs.rename(checksums,path.join(outdir,'SHA256SUMS'));
+   const checksums=path.join(outdir,'.SHA256SUMS.'+process.pid+'.tmp');await fs.writeFile(checksums,archiveSha256+'  '+archiveName+'\n');await fs.rename(checksums,path.join(outdir,'SHA256SUMS'));
   }
   return{directory:destination,archive:archivePath,sha256:archiveSha256,archiveBytes,...verified};
  }catch(error){await fs.rm(temporary,{recursive:true,force:true});if(archiveTemporary)await fs.rm(archiveTemporary,{force:true});throw error;}
 }
+export async function buildInstallers({root=repository,outdir=path.join(root,'work/release')}={}){
+ const results=[];
+ for(const variant of ['full','codex']){
+  const result=await buildInstaller({root,outdir:path.join(outdir,variant),variant,maxArchiveBytes:variant==='codex'?12*1024*1024:100*1024*1024});
+  const archive=path.join(outdir,path.basename(result.archive));await fs.rename(result.archive,archive);results.push({...result,archive});
+ }
+ await fs.writeFile(path.join(outdir,'SHA256SUMS'),results.map(r=>r.sha256+'  '+path.basename(r.archive)+'\n').join(''));
+ return results;
+}
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const args=process.argv.slice(2),option=key=>{const i=args.indexOf(key);if(i<0)return undefined;if(!args[i+1]||args[i+1].startsWith('--'))throw Error(key+' requires a value');return args[i+1];};
- try{console.log(JSON.stringify(await buildInstaller({outdir:option('--out'),entryPoint:option('--entry'),archive:!args.includes('--no-archive')}),null,2));}catch(error){console.error(error.message);process.exitCode=1;}
+ try{console.log(JSON.stringify(args.includes('--entry')||args.includes('--no-archive')?await buildInstaller({outdir:option('--out'),entryPoint:option('--entry'),archive:!args.includes('--no-archive')}):await buildInstallers({outdir:option('--out')}),null,2));}catch(error){console.error(error.message);process.exitCode=1;}
 }

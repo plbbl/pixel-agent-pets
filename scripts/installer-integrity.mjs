@@ -32,5 +32,7 @@ export async function verifyInstallerPayload(directory){
   if(stat.size!==entry.size||sha256!==entry.sha256)throw Error('Installer integrity mismatch: '+entry.path);bytes+=entry.size;
  }
  const actual=await tree(directory);if(actual.length!==expected.size||actual.some(file=>!expected.has(file)))throw Error('Installer payload contains unexpected files');
- return{files:manifest.files.length,bytes,version:manifest.packageVersion,animations:manifest.animations};
+ const targets=manifest.targets??['codex','dsh'];
+ if(!Array.isArray(targets)||!targets.length||new Set(targets).size!==targets.length||targets.some(target=>!['codex','dsh'].includes(target)))throw Error('Invalid installer target capabilities');
+ return{files:manifest.files.length,bytes,version:manifest.packageVersion,animations:manifest.animations,targets};
 }

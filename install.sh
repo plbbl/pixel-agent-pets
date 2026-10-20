@@ -4,7 +4,7 @@ umask 077
 
 # Installs only this project's prebuilt release. Model credentials are never read.
 if [[ "${1:-}" == "--help" ]]; then
-  printf '%s\n' '抱抱龙 Pets: install.sh --dsh [--profile NAME]' 'Restore: install.sh uninstall --dsh [--profile NAME]' 'Codex full native integration is a source preview; installation is unavailable pending macOS runtime signing.'
+  printf '%s\n' '抱抱龙 Pets: install.sh --codex | --dsh [--profile NAME]' 'Restore: install.sh uninstall --codex | --dsh [--profile NAME]' 'Codex：官方九状态兼容图集；DSH：完整66套动作。'
   exit 0
 fi
 for pet_tool in curl tar awk mktemp; do
@@ -30,6 +30,16 @@ pet_sha() {
 pet_download() { curl --fail --location --silent --show-error --retry 3 --proto '=https' --tlsv1.2 "$1" --output "$2"; }
 pet_base='https://github.com/plbbl/pixel-agent-pets/releases/latest/download'
 pet_archive='Pixel-Agent-Pets-Installer.tar.gz'
+pet_codex_only=false
+pet_codex_requested=false
+pet_dsh_requested=false
+for pet_arg in "$@"; do
+  case "$pet_arg" in --codex) pet_codex_requested=true;; --dsh) pet_dsh_requested=true;; --both) pet_codex_requested=true; pet_dsh_requested=true;; esac
+done
+if [[ "$pet_codex_requested" == true && "$pet_dsh_requested" == false ]]; then
+  pet_codex_only=true
+  pet_archive='Pixel-Agent-Pets-Codex.tar.gz'
+fi
 printf '%s\n' '正在下载抱抱龙 Pets 安装包…'
 pet_download "$pet_base/$pet_archive" "$pet_tmp/$pet_archive"
 pet_download "$pet_base/SHA256SUMS" "$pet_tmp/SHA256SUMS"
@@ -67,6 +77,7 @@ pet_version="$("$pet_node" -p 'require(process.argv[1]).version' "$pet_payload/p
 [[ "$pet_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.-]+)?$ ]] || { printf '%s\n' '安装包版本无效。' >&2; exit 1; }
 mkdir -p "$pet_home/versions"
 pet_destination="$pet_home/versions/$pet_version"
+if [[ "$pet_codex_only" == true ]]; then pet_destination="$pet_destination-codex"; fi
 [[ ! -L "$pet_destination" ]] || { printf '%s\n' '版本目录是用户符号链接，未替换。' >&2; exit 1; }
 export PATH="$(dirname "$pet_node"):$PATH"
 printf '%s\n' '安装包校验通过，正在配置宠物…'

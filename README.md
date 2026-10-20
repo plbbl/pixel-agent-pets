@@ -21,84 +21,89 @@
 
 ### 先挑清晰度，再看看它们
 
-**[自动清晰度](https://plbbl.github.io/pixel-agent-pets/?quality=auto&size=240#theater)** · **[原画 720p](https://plbbl.github.io/pixel-agent-pets/?quality=720&size=240#theater)** · **[清晰 360p](https://plbbl.github.io/pixel-agent-pets/?quality=360&size=240#theater)** · **[轻量像素](https://plbbl.github.io/pixel-agent-pets/?quality=pixel&size=120#theater)**
+**[自动清晰度](https://plbbl.github.io/pixel-agent-pets/?quality=auto&size=240#theater)** · **[高清 320px](https://plbbl.github.io/pixel-agent-pets/?quality=720&size=240#theater)** · **[清晰 160px](https://plbbl.github.io/pixel-agent-pets/?quality=360&size=240#theater)** · **[轻量像素](https://plbbl.github.io/pixel-agent-pets/?quality=pixel&size=120#theater)**
 
-展示页默认根据显示大小与屏幕像素密度自动选择清晰度，也可以分别手动调整**清晰度**与**显示大小**，挑选动作、暂停、拖动进度、重播。720p 与 360p 使用保存的清晰视频素材；轻量模式使用桌面宠物图集。Clawd 保持原版像素。GitHub README 不运行交互脚本，上面的入口会直接打开对应清晰度的展示页，进去后仍可随时切换。
+展示页默认根据显示大小与屏幕像素密度自动选择清晰度，也可以分别手动调整**清晰度**与**显示大小**，挑选动作、暂停、拖动进度、重播。高清与清晰模式使用真实 320px／160px 动作图集；轻量模式使用桌面宠物图集。Clawd 保持原版像素。GitHub README 不运行交互脚本，上面的入口会直接打开对应清晰度的展示页，进去后仍可随时切换。
 
 <table>
 <tr>
-<td align="center" width="25%"><a href="https://plbbl.github.io/pixel-agent-pets/?quality=720&amp;size=240#theater"><img src="docs/media/claude.gif" width="160" alt="Claude 像素待机预览"></a><br><strong>Claude</strong><br><sub>认真，但有一点怀疑。</sub><br><sub>12 套动作 · 中文彩蛋</sub></td>
-<td align="center" width="25%"><img src="docs/media/gpt.gif" width="160" alt="纯白 GPT 像素待机预览"><br><strong>GPT</strong><br><sub>可以开始了。先确认一下。</sub><br><sub>14 套动作 · 探针与门禁</sub></td>
-<td align="center" width="25%"><img src="docs/media/deepseek.gif" width="160" alt="DeepSeek 像素待机预览"><br><strong>DeepSeek</strong><br><sub>雷霆思考，光速开饭。</sub><br><sub>15 套动作 · 大米饭宇宙</sub></td>
-<td align="center" width="25%"><img src="docs/media/clawd.gif" width="160" alt="原版 Clawd 像素待机预览"><br><strong>Clawd</strong><br><sub>那个熟悉的小家伙。</sub><br><sub>25 套原版动作</sub></td>
+<td align="center" width="33%"><a href="https://plbbl.github.io/pixel-agent-pets/?pet=claude&amp;quality=720&amp;size=320#theater"><img src="docs/media/claude.gif" width="280" alt="Claude 高清完整中文彩蛋"></a><br><strong>Claude · 中文彩蛋</strong><br><sub>中文？→中国人？→白眼→封禁印章</sub></td>
+<td align="center" width="33%"><a href="https://plbbl.github.io/pixel-agent-pets/?pet=gpt&amp;quality=720&amp;size=320#theater"><img src="docs/media/gpt.gif" width="280" alt="GPT 高清完整探针门禁冒烟验收矩阵到开工"></a><br><strong>GPT · 开工之前</strong><br><sub>探针→门禁→冒烟→验收矩阵→开工</sub></td>
+<td align="center" width="33%"><a href="https://plbbl.github.io/pixel-agent-pets/?pet=deepseek&amp;quality=720&amp;size=320#theater"><img src="docs/media/deepseek.gif" width="280" alt="DeepSeek 高清完整没饭讨饭吃饭偷饭晕碳演出"></a><br><strong>DeepSeek · 大米饭宇宙</strong><br><sub>没饭→讨饭→吃饭→偷饭→晕碳ing</sub></td>
 </tr>
 </table>
 
-上面的动图是轻量像素预览。清晰版在[动作展示页](https://plbbl.github.io/pixel-agent-pets/?quality=720&size=240#theater)中按需加载，不增加桌面插件的资源开销。
+<p align="center"><img src="docs/media/clawd.gif" width="120" alt="原版 Clawd"><br><sub>另有原版 Clawd · 25 套经典像素动作</sub></p>
+
+上面三套动图使用高清素材，完整播放经典演出链；Clawd 保持原版像素。[动作展示页](https://plbbl.github.io/pixel-agent-pets/?quality=auto&size=240#theater)可切换清晰度、大小与每个独立动作。展示媒体按需加载，不增加桌面插件的资源开销。
 
 ## 安装
 
-**DSH 一键安装已就绪；Codex 原位完整接入仍受 macOS 签名条件阻塞，暂不可自动安装。**不把精简图集或额外窗口当作原位完整支持。
+选择客户端，把对应命令复制到终端。安装器下载并校验已构建的资源；无需克隆仓库、`npm install` 或手动复制文件。缺少 Node.js 时会准备独立运行环境，不替换系统 Node。宠物不需要 API Key。
 
-### Codex：原位完整播放器预览 · 签名验证中
+### 独立桌宠：macOS 与 Windows
 
-原位播放器与接入源码已经完成，与 DSH 共用 `Player` 和行为逻辑，包含 66 套完整动作、剧情字幕与显示控制；目标是 **Codex 原来的宠物窗口**，不增加悬浮窗口，CLI 与模型内核保持不变。
+**[下载安装包](https://github.com/plbbl/pixel-agent-pets/releases/latest)**。macOS 打开 DMG，把「抱抱龙桌宠」拖到 Applications；Windows 运行安装程序。无需安装 DSH、Codex 或 Node.js。
 
-**自动安装暂不可用。**实际签名核验发现，外层应用临时本地签名无法通过 macOS 的库验证，所需的受认可签名条件尚未满足。当前安装器在修改应用前停止，不会关闭系统安全保护来强行安装。
+桌面上只有透明的小宠物。拖动调整位置，**右键或托盘菜单**切换四个角色、完整演出、单独动作、大小与清晰度。空闲时自动轮换，点击有回应；字幕始终在上方。偏好和位置保存在本机。使用系统 WebView，完整素材本地播放，不依赖模型服务。
 
-源码接入按 **macOS Codex 26.1013.40934（20770）** 核验；这不是可用安装版本的承诺。播放器逐帧一致性、备份与恢复有自动测试，真实原位运行仍未完成验证。
+### Codex：官方 9 状态兼容版
 
-<details>
-<summary>为什么不能直接重新签名？</summary>
+```sh
+curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- --codex
+```
 
-macOS 会验证应用加载的库是否符合签名条件。临时签名不足以满足当前应用的库验证；仅重签外层应用会得到无法正常加载的安装结果。完整恢复备份与源码测试不能替代这项验证，因此本版本只提供原位集成预览，不提供可执行的 Codex 一键安装入口。
+需要支持自定义宠物的 Codex 桌面版。安装器只添加官方支持的宠物图集，**不修改 Codex 应用、签名或 CLI**。安装后打开 `⌘, → Mini 与虚拟宠物`，刷新列表并选择角色；若列表尚未更新，重新打开 Codex。
 
-</details>
+Claude、GPT、DeepSeek 各有**高清与 80px 像素资源**可选，Clawd 保留原版像素。在官方宠物「外观」中调整大小（80–224px）。角色、位置与工作状态由官方宠物系统管理，使用原来的宠物窗口。
 
-### 官方 DeepSeek Harness：直接住进输入框
+**Codex 固定播放 9 种官方状态映射。**思考、文字输出和工具执行共用官方 `running` 状态；不包含完整 66 动作自动触发、中文剧情或上方字幕。展示页可以播放所有原始动作，不能据此推断 Codex 兼容版拥有相同的完整演出逻辑。
 
-复制到终端即可。安装器下载已构建资源并逐文件校验；无需克隆仓库、`npm install` 或手动复制图集。缺少 Node.js 时会准备独立运行环境，不替换系统 Node。宠物不需要 API Key。
+### 官方 DeepSeek Harness：完整 66 动作
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- --dsh
 ```
 
-先安装并启动过[官方 DSH 网页客户端](https://github.com/deepseek-ai/deepseek-harness)。只有一个网页 profile 时自动选择；有多个时在终端选一个。已有 profile 缺失依赖或损坏时会停止并保留原配置，不修补其他插件、模型或权限设置。
+先安装并启动过[官方 DSH 网页客户端](https://github.com/deepseek-ai/deepseek-harness)。只有一个网页 profile 时自动选择；多个时在终端选一个。已有 profile 缺失依赖或损坏时停止并保留原配置，不修补其他插件、模型或权限设置。
 
-安装后重新打开对应 DSH 网页窗口。**右键宠物切换角色、大小和清晰度**；自动清晰度根据显示大小和屏幕像素密度选择 80/160/320px 源，调整时继续当前动作。已实测官方 **0.1.0-rc.6 web 客户端**；终端 TUI 不显示网页宠物。
+安装后重新打开对应网页窗口。**右键宠物切换角色、大小和清晰度**，也可以预览完整动作。66 套动作按真实发送、思考、输出、工具、确认、错误与完成状态触发；空闲动作轮换。自动清晰度结合显示大小和屏幕像素密度选择 80/160/320px 源，调整时继续当前动作。已实测官方 **0.1.0-rc.6 web 客户端**；终端 TUI 不显示网页宠物。
 
-### 检查与恢复
+### 三个版本，按用途选择
 
-使用同一个入口即可检查或卸载，不需要寻找下载目录：
+| | 独立桌宠 | Codex 官方兼容版 | DSH 完整插件 |
+|---|---|---|---|
+| 动作 | 完整 66 套与经典演出链 | 9 种官方状态映射 | 完整 66 套动作与细分触发 |
+| 状态来源 | 空闲轮换、鼠标互动和菜单选择 | 官方宠物状态机 | 当前官方 UI 活动 |
+| 剧情与字幕 | 支持 | 不包含 | 支持 |
+| 角色与大小 | 右键／托盘 | 官方设置；80–224px | 右键；80–224px |
+| 清晰度 | 自动／80／160／320px | 高清／80px 图集选项；Clawd 原像素 | 自动／80／160／320px；Clawd 原像素 |
+| 应用与内核 | 独立应用 | 不改应用、签名或 CLI | 不改 CLI、provider 或权限 |
+
+Codex 和 DSH 使用客户端现有界面；独立桌宠是另一个可单独安装的桌面应用。
+
+### 检查与卸载
+
+使用同一个入口，不需要寻找下载目录：
 
 ```sh
+curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- doctor --codex
 curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- doctor --dsh
 
+curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- uninstall --codex
 curl -fsSL https://raw.githubusercontent.com/plbbl/pixel-agent-pets/main/install.sh | bash -s -- uninstall --dsh
 ```
 
-DSH 卸载只移除本插件。`doctor` 检查安装文件与配置。Codex 原位安装尚未开放；不能把安装器测试或文件检查称作真实运行验收。[详细安装、可选参数与恢复说明](docs/installation.md)
+Codex 只移除本项目管理的宠物文件并保留恢复备份；DSH 只移除本插件。其他宠物、插件、会话、模型和密钥不受影响。[详细安装与恢复说明](docs/installation.md)
 
 ### 小，也要认真
 
-| | Codex 原位集成预览 | DSH 插件 |
-|---|---|---|
-| 当前状态 | 签名条件阻塞，暂不可安装 | 一键安装可用 |
-| 位置 | 原来的宠物窗口 | 输入区 |
-| 动作与触发 | 共享完整 66 套动作与行为逻辑 | 共享完整 66 套动作与行为逻辑 |
-| 状态来源 | 当前原生任务、工具与输入状态 | 官方客户端 UI 状态 |
-| 显示控制 | 右键角色、大小、清晰度 | 右键角色、大小、清晰度 |
+独立桌宠与 DSH 使用固定脚底线、解码后切换和有限缓存；隐藏时停表，尊重系统“减少动态效果”。完整动作与字幕在本地播放，不调用模型，不把字幕写进提示词。当前草稿是否含中文只生成本地布尔值；Codex 兼容图集不观察草稿或扫描会话文件。
 
-固定脚底线、图片解码后再切换、有限缓存；隐藏时停表，尊重系统“减少动态效果”。动画不调用模型、不改变 CLI 内核，也不把字幕写进提示词。当前输入是否含中文只生成一个本地布尔值，不传输输入原文。
-
-Claude 的中文剧情只是本地角色表演：不识别国籍，也不会封禁任何账户。详见[行为说明](docs/behavior.md)。
+Claude 的中文剧情仅存在于完整预览、独立桌宠与 DSH 本地演出：不识别国籍，也不会封禁真实账户。详见[行为说明](docs/behavior.md)。
 
 <details>
-<summary><b>可选：9 状态兼容图集与开发</b></summary>
-
-只想添加官方可识别的兼容图集，可使用[展示页的兼容入口](https://plbbl.github.io/pixel-agent-pets/#native-install)。这是 **9 种固定状态的精简版**，不包含完整动作逻辑与剧情字幕，不能替代原位完整集成。
-
-从源码开发需要 Node.js 与项目依赖：
+<summary><b>从源码开发</b></summary>
 
 ```sh
 git clone https://github.com/plbbl/pixel-agent-pets.git
@@ -107,12 +112,9 @@ npm ci
 npm run build
 npm run check
 npm test
-
-# 仅安装旧的兼容图集
-node scripts/cli.mjs install --codex
 ```
 
-兼容图集可在 `⌘, → Mini 与虚拟宠物` 中刷新并选中。旧独立 macOS 伴侣已归档；它会额外创建窗口，不在当前安装流程中推荐，也不能用于宣称原位完整支持。
+源码开发需要项目依赖；使用上面的一键安装不需要。展示页的[逐只导入入口](https://plbbl.github.io/pixel-agent-pets/#native-install)也是 Codex 官方 9 状态兼容图集，不增加完整剧情触发。
 
 </details>
 

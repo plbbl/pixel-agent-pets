@@ -34,9 +34,12 @@ export class Player {
   if(!next.busy&&old.busy)this.idleSince=performance.now();
   if(next.awaitingInput){this.base(true);return;}
   if(next.phase==='stopping'){
-   if(next.busy)this.base(true);
-   else if(old.busy||old.phase!=='stopping')this.play(this.character==='clawd'?'Turning':this.character==='claude'?'stopped':'error',true);
-   return;
+   const action=this.character==='clawd'?'Turning':this.character==='claude'?'stopped':'error';
+   if(next.busy){this.base(true);return;}
+   if(old.busy||old.phase!=='stopping'){this.play(action,true);return;}
+   // Cached terminal facts remain after feedback ends. Keep that feedback
+   // intact, then allow a genuinely new idle draft to trigger its own action.
+   if(this.transient&&this.action===action)return;
   }
   if(next.errorId&&next.errorId!==old.errorId){this.play(this.character==='clawd'?'Facepalm':'error',true);return;}
   if(next.busy&&!old.busy){if(this.media.matches){this.base(true);return;}this.play(this.character==='clawd'?'Excited':this.character==='claude'?'sending':this.character==='gpt'?'wave':'fast',true);return;}

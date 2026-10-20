@@ -1,0 +1,53 @@
+name: Native desktop pets
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['desktop/**', 'assets/**', 'assets-hd/**', 'src/player.ts', 'src/stories.ts', '.github/workflows/desktop.yml']
+permissions:
+  contents: read
+jobs:
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: Windows-x64
+          - os: macos-15
+            name: macOS-arm64
+          - os: macos-15-intel
+            name: macOS-x64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop/src-tauri -> target
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+      - run: npm test
+      - run: cargo test --locked --manifest-path src-tauri/Cargo.toml
+      - run: npm run build:app
+      - name: Run real native renderer smoke test
+        run: npm run smoke
+      - name: Name downloads and write checksums
+        run: npm run package
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Pixel-Agent-Pets-${{ matrix.name }}
+          path: |
+            desktop/artifacts/*
+          if-no-files-found: warn

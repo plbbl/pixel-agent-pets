@@ -35,3 +35,25 @@ test('DSH frozen interrupted outputs use the same terminal stop signal as the na
  assert.notEqual(p.activityFromDSH({running:true,nodes:[old]}).phase,'stopping');
  assert.notEqual(p.activityFromDSH({running:false,nodes:[{...old,interrupted:undefined}]}).phase,'stopping');
 });
+test('official latest turn/end abort is authoritative even without an interrupted assistant',()=>{
+ const turn=(id,kind)=>({turn:id,status:'closed',end:{type:'turn/end',seq:id*10,data:{turn:id,reason:{kind}}}});
+ const chat={timeline:{turnOrder:[1],turns:new Map([[1,turn(1,'aborted')]])}};
+ const snapshot={sessionId:'synthetic',running:false,runningCalls:[],pending:[],partial:null,chat,nodes:[{kind:'assistant',turn:1,seq:4,blocks:[{kind:'text',text:'private completed model output'}]},{kind:'tool-result',seq:7,callId:'tool-done',content:[]}]};
+ const stopped=p.activityFromDSH(snapshot);assert.equal(stopped.phase,'stopping');assert.equal(stopped.busy,false);assert.equal(stopped.turnId,'1');assert.ok(!JSON.stringify(stopped).includes('private'));
+ assert.notEqual(p.activityFromDSH({...snapshot,running:true}).phase,'stopping');
+ const finished={timeline:{turnOrder:[1,2],turns:new Map([[1,turn(1,'aborted')],[2,turn(2,'completed')]])}};
+ assert.notEqual(p.activityFromDSH({...snapshot,chat:finished,nodes:[{kind:'assistant',interrupted:true,turn:1}]}).phase,'stopping');
+ const newer={timeline:{turnOrder:[1,2],turns:new Map([[1,turn(1,'aborted')],[2,{turn:2,status:'open'}]])}};
+ assert.notEqual(p.activityFromDSH({...snapshot,chat:newer,nodes:[{kind:'assistant',interrupted:true,turn:1}]}).phase,'stopping');
+});
+test('idle claimed-command submission sends immediately without overriding real work or queued input',()=>{
+ const idle={busy:false,phase:'thinking',errorId:'old-failure'};
+ assert.deepEqual(p.activityWithDSHInput(idle,{phase:'submitting',chineseDraft:true}),{busy:true,phase:'sending',errorId:undefined,chineseDraft:true});
+ for(const activity of [{busy:true,phase:'thinking'},{busy:true,phase:'tools',tool:'read_file',toolId:'read-1'},{busy:false,phase:'tools',tool:'read_file'},{busy:false,phase:'thinking',awaitingInput:true},{busy:true,phase:'retrying'}]){
+  assert.deepEqual(p.activityWithDSHInput(activity,{phase:'submitting'}),{...activity,chineseDraft:false});
+ }
+ assert.deepEqual(p.activityWithDSHInput(idle,{phase:'submitting',queued:true}),{...idle,chineseDraft:false});
+ // Ordinary rc.6 text follows default-sink and stays plain during admission.
+ assert.deepEqual(p.activityWithDSHInput(idle,{phase:'plain'}),{...idle,chineseDraft:false});
+ assert.deepEqual(p.activityWithDSHInput(idle,{phase:'adjudicating'}),{...idle,chineseDraft:false});
+});
