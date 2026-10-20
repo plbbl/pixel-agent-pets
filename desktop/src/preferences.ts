@@ -1,14 +1,16 @@
 import {petView, type PetQuality, type PetView} from '../../src/pet-view';
 import type {Character} from '../../src/policy';
+import type {Follow} from './behavior';
 
-export type Preferences = PetView & {character: Character};
+export type Preferences = PetView & {character: Character; follow: Follow};
 export const preferenceKey = 'baobaolong.desktop.preferences.v1';
 export const characters: Character[] = ['claude', 'gpt', 'deepseek', 'clawd'];
 export const qualities: PetQuality[] = ['auto', '80', '160', '320'];
+export const followModes: Follow[] = ['auto', 'codex', 'dsh', 'off'];
 
 export function preferences(value: unknown): Preferences {
   const input = value && typeof value === 'object' ? value as Partial<Preferences> : {};
-  return {...petView(input), character: characters.includes(input.character!) ? input.character! : 'claude'};
+  return {...petView(input), character: characters.includes(input.character!) ? input.character! : 'claude', follow: followModes.includes(input.follow!) ? input.follow! : 'auto'};
 }
 
 export function readPreferences(storage: Pick<Storage, 'getItem'>): Preferences {

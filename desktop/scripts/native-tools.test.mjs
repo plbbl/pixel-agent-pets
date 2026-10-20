@@ -4,12 +4,13 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import {createHash} from 'node:crypto';
-import {validateSmoke} from './smoke.mjs';
+import {validateSmoke,behaviorRequirements} from './smoke.mjs';
 import {packageArtifacts} from './package-artifacts.mjs';
 test('native smoke evidence requires real frames for every pet and quality',()=>{
  const checks=['claude','gpt','deepseek','clawd'].flatMap(character=>['auto','80','160','320'].map(quality=>({character,quality,drawnPixels:100})));
- const report={ok:true,frontendReady:true,frameDrawn:true,drawnPixels:100,characters:4,animations:66,checks};assert.equal(validateSmoke(report),report);
- assert.throws(()=>validateSmoke({...report,drawnPixels:0}),/nonblank/);assert.throws(()=>validateSmoke({...report,checks:checks.filter(c=>c.character!=='gpt')}),/every character/);
+ const behaviorChecks=Object.entries(behaviorRequirements).map(([scenario,[mode,action]],index)=>({scenario,mode,action,source:index%2?'dsh':'codex',drawnPixels:100}));
+ const report={ok:true,frontendReady:true,frameDrawn:true,drawnPixels:100,characters:4,animations:66,checks,behaviorChecks};assert.equal(validateSmoke(report),report);
+ assert.throws(()=>validateSmoke({...report,drawnPixels:0}),/nonblank/);assert.throws(()=>validateSmoke({...report,behaviorChecks:[]}),/work and mouse/);assert.throws(()=>validateSmoke({...report,behaviorChecks:behaviorChecks.map(check=>({...check,source:'codex'}))}),/both Codex and DSH/);assert.throws(()=>validateSmoke({...report,checks:checks.filter(c=>c.character!=='gpt')}),/every character/);
 });
 test('native download filenames and checksums are stable on both target operating systems',async t=>{
  const temp=await fs.mkdtemp(path.join(os.tmpdir(),'pet-native-artifacts-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));

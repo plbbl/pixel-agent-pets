@@ -130,7 +130,7 @@ export async function buildInstaller({root=repository,entryPoint=path.join(root,
  const assets=await collectAssets(root,{codexOnly});await fs.mkdir(outdir,{recursive:true});const temporary=await fs.mkdtemp(path.join(outdir,'.pixel-agent-pets-stage-'));
  const destination=path.join(outdir,'pixel-agent-pets');let archiveTemporary;
  try{
-  const required=['LICENSE','NOTICE.md',...(codexOnly?[]:['dist/index.js','dist/client.js','scripts/hd-asset-route.mjs','cordis.patch.yml'])];
+  const required=['LICENSE','NOTICE.md',...(codexOnly?[]:['dist/index.js','dist/client.js','scripts/hd-asset-route.mjs','scripts/dsh-activity-bridge.mjs','cordis.patch.yml'])];
   for(const relative of [...required,...assets.files])await copy(root,temporary,relative);
   await fs.writeFile(path.join(temporary,'package.json'),JSON.stringify(runtimePackage(sourcePackage,{codexOnly}),null,2)+'\n');
   // Bundle the installer with no developer dependencies on the user's machine.

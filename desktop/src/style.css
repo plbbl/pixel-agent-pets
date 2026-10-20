@@ -43,6 +43,7 @@ button { font: inherit; color: inherit; }
 #menu[hidden] { display: none; }
 #menu button { display: block; width: 100%; padding: 6px 9px; border: 0; border-radius: 5px; background: transparent; text-align: left; cursor: default; }
 #menu button:hover, #menu button:focus-visible { background: #e9e2d6; outline: 0; }
+#menu button:disabled { opacity: .42; background: transparent; }
 #menu button[aria-checked=true]::before { content: '✓'; display: inline-block; width: 18px; margin-left: -1px; }
 #menu button[aria-checked=false] { padding-left: 26px; }
 #menu small { display: block; margin: 7px 9px 3px; color: var(--muted); font-size: 11px; }

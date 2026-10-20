@@ -10,7 +10,7 @@ async function fixture(t){
  const temp=await fs.mkdtemp(path.join(os.tmpdir(),'baobaolong-easy-dsh-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
  const repo=path.join(temp,'prebuilt'),home=path.join(temp,'dsh-home');await fs.mkdir(repo,{recursive:true});
  await fs.writeFile(path.join(repo,'package.json'),JSON.stringify({name:packageName,version:'test'}));
- for(const file of ['dist/client.js','dist/index.js','scripts/hd-asset-route.mjs','cordis.patch.yml']){await fs.mkdir(path.dirname(path.join(repo,file)),{recursive:true});await fs.writeFile(path.join(repo,file),'prebuilt');}
+ for(const file of ['dist/client.js','dist/index.js','scripts/hd-asset-route.mjs','scripts/dsh-activity-bridge.mjs','cordis.patch.yml']){await fs.mkdir(path.dirname(path.join(repo,file)),{recursive:true});await fs.writeFile(path.join(repo,file),'prebuilt');}
  await fs.mkdir(path.join(repo,'assets-hd/claude/idle'),{recursive:true});
  await fs.writeFile(path.join(repo,'assets-hd/claude/idle/320-0.png'),'fixture PNG');
  await fs.writeFile(path.join(repo,'assets-hd/manifest.json'),JSON.stringify({version:1,characters:{claude:{animations:{idle:{'320':{files:['claude/idle/320-0.png']}}}}}}));

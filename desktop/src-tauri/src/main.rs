@@ -1,5 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+mod activity;
 mod model;
+use activity::{Activity, Follow};
 use model::{Catalog, Preferences, Selection};
 use serde::Serialize;
 use serde_json::{json, Value};
@@ -10,7 +12,7 @@ use std::{
         atomic::{AtomicBool, Ordering},
         Mutex,
     },
-    time::{Duration, SystemTime, UNIX_EPOCH},
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 use tauri::{
     menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu},
@@ -28,7 +30,16 @@ struct PetState {
     position_dirty: AtomicBool,
     smoke_progress: Mutex<Vec<model::DrawCheck>>,
     smoke: Option<PathBuf>,
+    activity: Mutex<Activity>,
+    drag: Mutex<model::DragTracker>,
+    manual_available: AtomicBool,
+    manual_source: Mutex<Option<String>>,
 }
+fn gesture_ms() -> u64 {
+    static START: std::sync::OnceLock<Instant> = std::sync::OnceLock::new();
+    START.get_or_init(Instant::now).elapsed().as_millis() as u64
+}
+
 fn error(e: impl std::fmt::Display) -> String {
     e.to_string()
 }
@@ -57,6 +68,19 @@ fn native_menu(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         .lock()
         .unwrap_or_else(|p| p.into_inner())
         .clone();
+    let facts = state
+        .activity
+        .lock()
+        .unwrap_or_else(|p| p.into_inner())
+        .clone();
+    let accepted = match prefs.follow {
+        Follow::Off => false,
+        Follow::Auto => true,
+        Follow::Codex => facts.source.as_deref() == Some("codex"),
+        Follow::Dsh => facts.source.as_deref() == Some("dsh"),
+    };
+    let working = accepted && (facts.busy || facts.awaiting_input);
+    let available = !working && state.manual_available.load(Ordering::SeqCst);
     let roles = Submenu::new(app, "切换宠物", true)?;
     for c in &state.catalog.characters {
         roles.append(&CheckMenuItem::with_id(
@@ -68,14 +92,22 @@ fn native_menu(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
             None::<&str>,
         )?)?;
     }
-    let actions = Submenu::new(app, "完整动作库", true)?;
+    let actions = Submenu::new(
+        app,
+        if !available {
+            "完整动作库 · 工作状态优先"
+        } else {
+            "完整动作库"
+        },
+        available,
+    )?;
     if let Some(c) = state.catalog.character(&prefs.character) {
         for a in &c.actions {
             actions.append(&MenuItem::with_id(
                 app,
                 format!("action:{}", a.id),
                 &a.title,
-                true,
+                available,
                 None::<&str>,
             )?)?;
         }
@@ -107,7 +139,58 @@ fn native_menu(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
             None::<&str>,
         )?)?;
     }
-    let story = MenuItem::with_id(app, "showcase", "完整演出", true, None::<&str>)?;
+    let story = MenuItem::with_id(
+        app,
+        "showcase",
+        if available {
+            "完整演出"
+        } else {
+            "完整演出（工作结束后可播放）"
+        },
+        available,
+        None::<&str>,
+    )?;
+    let connection = if prefs.follow == Follow::Off {
+        "跟随已关闭"
+    } else if accepted && facts.source.as_deref() == Some("codex") {
+        "跟随 Codex"
+    } else if accepted && facts.source.as_deref() == Some("dsh") {
+        "跟随 DSH"
+    } else {
+        "未连接工作来源"
+    };
+    let source = state
+        .manual_source
+        .lock()
+        .unwrap_or_else(|p| p.into_inner())
+        .clone()
+        .or(facts.source);
+    let status_title = if !available {
+        match source.as_deref() {
+            Some("codex") => "正在跟随 Codex，工作结束后可播放",
+            Some("dsh") => "正在跟随 DSH，工作结束后可播放",
+            _ => "动作反馈播放中，请稍候",
+        }
+    } else {
+        connection
+    };
+    let status = MenuItem::with_id(app, "activity-status", status_title, false, None::<&str>)?;
+    let follow = Submenu::new(app, "跟随工作", true)?;
+    for (value, title, choice) in [
+        ("auto", "自动", Follow::Auto),
+        ("codex", "Codex", Follow::Codex),
+        ("dsh", "DSH", Follow::Dsh),
+        ("off", "关闭", Follow::Off),
+    ] {
+        follow.append(&CheckMenuItem::with_id(
+            app,
+            format!("follow:{value}"),
+            title,
+            true,
+            prefs.follow == choice,
+            None::<&str>,
+        )?)?;
+    }
     let visible = MenuItem::with_id(
         app,
         "visible",
@@ -128,6 +211,8 @@ fn native_menu(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
             &story,
             &sizes,
             &quality,
+            &follow,
+            &status,
             &PredefinedMenuItem::separator(app)?,
             &visible,
             &quit,
@@ -181,11 +266,23 @@ fn menu_selected(app: &tauri::AppHandle, id: &str) -> Result<(), String> {
                     next.quality = q.clone();
                     ("quality", json!(q))
                 }
+                Selection::Follow(follow) => {
+                    next.follow = follow;
+                    ("follow", json!(follow))
+                }
                 _ => unreachable!(),
             };
             save(&state, &next)?;
             *state.preferences.lock().map_err(error)? = next;
+            let follow_off = kind == "follow" && value.as_str() == Some("off");
+            if kind == "follow" {
+                state.manual_available.store(true, Ordering::SeqCst);
+                *state.manual_source.lock().map_err(error)? = None;
+            }
             emit(app, kind, value)?;
+            if follow_off {
+                publish_activity(app, Activity::default())?;
+            }
             refresh_menu(app)?;
         }
     }
@@ -199,6 +296,7 @@ struct FrontendConfig {
     smoke_test: bool,
     characters: usize,
     animations: usize,
+    activity: Activity,
 }
 #[tauri::command]
 fn frontend_ready(
@@ -217,6 +315,7 @@ fn frontend_ready(
         smoke_test: state.smoke.is_some(),
         characters: state.catalog.characters.len(),
         animations: state.catalog.animations,
+        activity: state.activity.lock().map_err(error)?.clone(),
     })
 }
 fn write_report(file: &Path, value: Value) -> Result<(), String> {
@@ -235,6 +334,7 @@ fn pet_drawn(
     height: u32,
     drawn_pixels: u32,
     checks: Option<Vec<model::DrawCheck>>,
+    behavior_checks: Option<Vec<model::BehaviorCheck>>,
 ) -> Result<(), String> {
     if !state.ready.load(Ordering::SeqCst)
         || !state.catalog.action(&character, &action)
@@ -251,6 +351,12 @@ fn pet_drawn(
         return Ok(());
     }
     if let Some(report) = &state.smoke {
+        if !behavior_checks
+            .as_deref()
+            .is_some_and(|checks| model::behavior_checks(&state.catalog, checks))
+        {
+            return Err("Every local and followed behavior must draw in smoke mode".into());
+        }
         if !checks
             .as_deref()
             .is_some_and(|checks| model::smoke_checks(&state.catalog, checks))
@@ -259,7 +365,7 @@ fn pet_drawn(
         }
         write_report(
             report,
-            json!({"ok":true,"frontendReady":true,"frameDrawn":true,"character":character,"action":action,"width":width,"height":height,"drawnPixels":drawn_pixels,"characters":state.catalog.characters.len(),"animations":state.catalog.animations,"platform":std::env::consts::OS,"version":env!("CARGO_PKG_VERSION"),"checks":checks,"timestamp":SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs()}),
+            json!({"ok":true,"frontendReady":true,"frameDrawn":true,"character":character,"action":action,"width":width,"height":height,"drawnPixels":drawn_pixels,"characters":state.catalog.characters.len(),"animations":state.catalog.animations,"platform":std::env::consts::OS,"version":env!("CARGO_PKG_VERSION"),"checks":checks,"behaviorChecks":behavior_checks,"timestamp":SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs()}),
         )?;
         state.drawn.store(true, Ordering::SeqCst);
         app.exit(0);
@@ -303,9 +409,29 @@ fn smoke_progress(
     Ok(())
 }
 #[tauri::command]
-fn start_dragging(window: tauri::WebviewWindow) -> Result<(), String> {
-    window.start_dragging().map_err(error)
+fn start_dragging(
+    window: tauri::WebviewWindow,
+    state: tauri::State<'_, PetState>,
+) -> Result<(), String> {
+    let origin = window.outer_position().map_err(error)?;
+    state.drag.lock().map_err(error)?.start(
+        origin.x,
+        origin.y,
+        window.scale_factor().map_err(error)?,
+        gesture_ms(),
+    );
+    if let Err(e) = window.set_ignore_cursor_events(false) {
+        state.drag.lock().map_err(error)?.cancel();
+        return Err(error(e));
+    }
+    if let Err(e) = window.start_dragging() {
+        state.drag.lock().map_err(error)?.cancel();
+        let _ = window.emit("pet:interaction", json!({"type":"drop","distance":0}));
+        return Err(error(e));
+    }
+    Ok(())
 }
+
 #[tauri::command]
 fn open_pet_menu(
     app: tauri::AppHandle,
@@ -338,6 +464,7 @@ fn sync_preferences(
         quality,
         visible: previous.visible,
         position: previous.position,
+        follow: previous.follow,
     };
     if !next.valid(&state.catalog) {
         return Err("Unsupported pet preferences".into());
@@ -346,6 +473,34 @@ fn sync_preferences(
     *state.preferences.lock().map_err(error)? = next.clone();
     refresh_menu(&app)?;
     Ok(next)
+}
+#[tauri::command]
+fn sync_behavior(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, PetState>,
+    manual_available: bool,
+    activity_source: Option<String>,
+) -> Result<(), String> {
+    if activity_source
+        .as_deref()
+        .is_some_and(|s| !["codex", "dsh"].contains(&s))
+    {
+        return Err("Unknown activity source".into());
+    }
+    let changed = state
+        .manual_available
+        .swap(manual_available, Ordering::SeqCst)
+        != manual_available;
+    let source_changed = {
+        let mut source = state.manual_source.lock().map_err(error)?;
+        let changed = *source != activity_source;
+        *source = activity_source;
+        changed
+    };
+    if changed || source_changed {
+        refresh_menu(&app)?;
+    }
+    Ok(())
 }
 #[tauri::command]
 fn window_fit(
@@ -390,6 +545,143 @@ fn window_fit(
     *prior = baseline;
     Ok(())
 }
+fn publish_activity(app: &tauri::AppHandle, next: Activity) -> Result<(), String> {
+    let state = app.state::<PetState>();
+    let changed = {
+        let mut current = state.activity.lock().map_err(error)?;
+        let changed = !current.same_facts(&next);
+        *current = next.clone();
+        changed
+    };
+    if changed && state.ready.load(Ordering::SeqCst) {
+        app.emit_to("pet", "pet:activity", next).map_err(error)?;
+        refresh_menu(app)?;
+    }
+    Ok(())
+}
+#[tauri::command]
+fn smoke_activity(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, PetState>,
+    scenario: String,
+) -> Result<(), String> {
+    if state.smoke.is_none() {
+        return Err("Activity fixtures are available only in smoke mode".into());
+    }
+    if scenario == "idle" {
+        menu_selected(&app, "follow:off")?;
+    } else if scenario != "drop" && lock_preferences(&state)?.follow == Follow::Off {
+        menu_selected(&app, "follow:auto")?;
+    }
+    if scenario == "drop" {
+        return app
+            .emit_to(
+                "pet",
+                "pet:interaction",
+                json!({"type":"drop","distance":240}),
+            )
+            .map_err(error);
+    }
+    let previous = state.activity.lock().map_err(error)?.clone();
+    let next = activity::smoke_scenario(&scenario, &previous, activity::now_ms())
+        .ok_or("Unknown activity fixture")?;
+    publish_activity(&app, next)
+}
+fn activity_observer(app: tauri::AppHandle) {
+    std::thread::spawn(move || {
+        let state = app.state::<PetState>();
+        if state.smoke.is_some() {
+            return;
+        }
+        let Some(config) = state.preferences_file.parent() else {
+            return;
+        };
+        let directory = config.join("activity");
+        let sentinel = directory.join("desktop-active.json");
+        let home = std::env::var_os("CODEX_HOME")
+            .map(PathBuf::from)
+            .filter(|p| p.is_absolute())
+            .or_else(|| {
+                std::env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" })
+                    .map(PathBuf::from)
+                    .map(|p| p.join(".codex"))
+            });
+        let mut codex = home.map(activity::CodexObserver::new);
+        let mut dsh = activity::DshObserver::default();
+        let mut last_heartbeat = 0;
+        loop {
+            if app.get_webview_window("pet").is_none() {
+                let _ = fs::remove_file(&sentinel);
+                break;
+            }
+            let Ok(prefs) = lock_preferences(&state) else {
+                break;
+            };
+            let now = activity::now_ms();
+            if matches!(prefs.follow, Follow::Auto | Follow::Dsh) {
+                if now.saturating_sub(last_heartbeat) >= 5_000 {
+                    let _ = activity::heartbeat(&sentinel, now);
+                    last_heartbeat = now;
+                }
+            } else {
+                let _ = fs::remove_file(&sentinel);
+                last_heartbeat = 0;
+            }
+            let c = codex.as_mut().and_then(|observer| {
+                observer.poll(matches!(prefs.follow, Follow::Auto | Follow::Codex), now)
+            });
+            let d = if matches!(prefs.follow, Follow::Auto | Follow::Dsh) {
+                dsh.poll(&directory, now)
+            } else {
+                None
+            };
+            let previous = state.activity.lock().map(|s| s.clone()).unwrap_or_default();
+            let next = activity::select(prefs.follow, c, d, &previous);
+            let _ = publish_activity(&app, next);
+            std::thread::sleep(Duration::from_secs(1));
+        }
+    });
+}
+// These snapshot APIs run only during a drag initiated on our own window.
+// No event tap, keyboard read, hook, or input history is installed.
+#[cfg(target_os = "macos")]
+fn drag_button_down() -> Option<bool> {
+    #[link(name = "CoreGraphics", kind = "framework")]
+    extern "C" {
+        fn CGEventSourceButtonState(state: i32, button: u32) -> bool;
+    }
+    Some(unsafe { CGEventSourceButtonState(0, 0) })
+}
+#[cfg(target_os = "windows")]
+fn drag_button_down() -> Option<bool> {
+    #[link(name = "user32")]
+    extern "system" {
+        fn GetAsyncKeyState(key: i32) -> i16;
+        fn GetSystemMetrics(index: i32) -> i32;
+    }
+    Some(unsafe { GetAsyncKeyState(if GetSystemMetrics(23) != 0 { 2 } else { 1 }) < 0 })
+}
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+fn drag_button_down() -> Option<bool> {
+    None
+}
+fn finish_drag(app: &tauri::AppHandle, state: &PetState) -> bool {
+    let Ok(mut drag) = state.drag.lock() else {
+        return false;
+    };
+    if !drag.active() {
+        return false;
+    }
+    if let Some(distance) = drag.finish(gesture_ms(), drag_button_down()) {
+        let _ = app.emit_to(
+            "pet",
+            "pet:interaction",
+            json!({"type":"drop","distance":distance}),
+        );
+    }
+    drag.active()
+}
+
 fn cursor_passthrough(app: tauri::AppHandle) {
     std::thread::spawn(move || {
         let mut last = None;
@@ -402,6 +694,10 @@ fn cursor_passthrough(app: tauri::AppHandle) {
             let state = app.state::<PetState>();
             if state.smoke.is_some() {
                 break;
+            }
+            if finish_drag(&app, &state) {
+                last = Some(true);
+                continue;
             }
             tick = (tick + 1) % 10;
             if tick == 0 && state.position_dirty.swap(false, Ordering::SeqCst) {
@@ -446,14 +742,14 @@ fn smoke_argument() -> Option<PathBuf> {
 fn main() {
     let smoke = smoke_argument();
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![frontend_ready,pet_drawn,start_dragging,open_pet_menu,sync_preferences,window_fit,frontend_error,smoke_progress])
+        .invoke_handler(tauri::generate_handler![frontend_ready,pet_drawn,start_dragging,open_pet_menu,sync_preferences,window_fit,frontend_error,smoke_progress,smoke_activity,sync_behavior])
         .setup(move |app| {
             #[cfg(target_os="macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             let catalog:Catalog=serde_json::from_str(include_str!("../generated/catalog.json"))?;
             let file=app.path().app_config_dir()?.join("preferences.json");
             let preferences=if smoke.is_some(){Preferences::default()}else{fs::read(&file).ok().and_then(|bytes|serde_json::from_slice::<Preferences>(&bytes).ok()).filter(|p|p.valid(&catalog)).unwrap_or_default()};
-            app.manage(PetState{catalog,preferences:Mutex::new(preferences.clone()),preferences_file:file,baseline:Mutex::new(42.0+preferences.size as f64*67.0/80.0),ready:AtomicBool::new(false),drawn:AtomicBool::new(false),position_dirty:AtomicBool::new(false),smoke_progress:Mutex::new(Vec::new()),smoke:smoke.clone()});
+            app.manage(PetState{catalog,preferences:Mutex::new(preferences.clone()),preferences_file:file,baseline:Mutex::new(42.0+preferences.size as f64*67.0/80.0),ready:AtomicBool::new(false),drawn:AtomicBool::new(false),position_dirty:AtomicBool::new(false),smoke_progress:Mutex::new(Vec::new()),smoke:smoke.clone(),activity:Mutex::new(Activity::default()),drag:Mutex::new(model::DragTracker::default()),manual_available:AtomicBool::new(true),manual_source:Mutex::new(None)});
             let window=app.get_webview_window("pet").ok_or("Missing pet window")?;window.set_focusable(false)?;window.set_always_on_top(true)?;
             let width=(preferences.size as f64*1.6+16.0).ceil().max(256.0);let height=preferences.size as f64+54.0;window.set_size(LogicalSize::new(width,height))?;
             let monitors=window.available_monitors()?;
@@ -464,16 +760,17 @@ fn main() {
             TrayIconBuilder::with_id("pet-tray").tooltip("抱抱龙桌宠 · 右键切换角色与动作").icon(icon).menu(&native_menu(app.handle())?).show_menu_on_left_click(true).build(app)?;
             if preferences.visible || smoke.is_some() { window.show()?; }
             cursor_passthrough(app.handle().clone());
-            if let Some(report)=smoke.clone() {let handle=app.handle().clone();std::thread::spawn(move ||{std::thread::sleep(Duration::from_secs(60));let state=handle.state::<PetState>();if !state.drawn.load(Ordering::SeqCst){let _=write_report(&report,json!({"ok":false,"frontendReady":state.ready.load(Ordering::SeqCst),"frameDrawn":false,"reason":"frontend draw timeout","checks":state.smoke_progress.lock().ok().map(|v|v.clone()),"platform":std::env::consts::OS}));handle.exit(1);}});}
+            activity_observer(app.handle().clone());
+            if let Some(report)=smoke.clone() {let handle=app.handle().clone();std::thread::spawn(move ||{std::thread::sleep(Duration::from_secs(120));let state=handle.state::<PetState>();if !state.drawn.load(Ordering::SeqCst){let _=write_report(&report,json!({"ok":false,"frontendReady":state.ready.load(Ordering::SeqCst),"frameDrawn":false,"reason":"frontend draw timeout","checks":state.smoke_progress.lock().ok().map(|v|v.clone()),"platform":std::env::consts::OS}));handle.exit(1);}});}
             Ok(())
         })
         .on_menu_event(|app,event|{if let Err(error)=menu_selected(app,event.id.as_ref()){eprintln!("Pet menu: {error}");}})
         .on_window_event(|window,event|{match event {
             tauri::WindowEvent::CloseRequested{api,..}=>{api.prevent_close();let _=set_visible(window.app_handle(),false);},
-            tauri::WindowEvent::Moved(position)=>{let state=window.state::<PetState>();if state.smoke.is_none(){if let Ok(mut prefs)=state.preferences.lock(){prefs.position=Some(model::PetPosition{x:position.x,y:position.y});state.position_dirty.store(true,Ordering::SeqCst);}}},
+            tauri::WindowEvent::Moved(position)=>{let state=window.state::<PetState>();if let Ok(mut drag)=state.drag.lock(){drag.moved(position.x,position.y,gesture_ms());}if state.smoke.is_none(){if let Ok(mut prefs)=state.preferences.lock(){prefs.position=Some(model::PetPosition{x:position.x,y:position.y});state.position_dirty.store(true,Ordering::SeqCst);}}},
             _=>{}
         }})
         .build(tauri::generate_context!())
         .expect("Unable to run the local pet app")
-        .run(|app,event|{if matches!(event,tauri::RunEvent::ExitRequested{..}|tauri::RunEvent::Exit){let state=app.state::<PetState>();if let Ok(prefs)=lock_preferences(&state){let _=save(&state,&prefs);}}});
+        .run(|app,event|{if matches!(event,tauri::RunEvent::ExitRequested{..}|tauri::RunEvent::Exit){let state=app.state::<PetState>();if let Some(config)=state.preferences_file.parent(){let _=fs::remove_file(config.join("activity/desktop-active.json"));}if let Ok(prefs)=lock_preferences(&state){let _=save(&state,&prefs);}}});
 }

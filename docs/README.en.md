@@ -14,7 +14,7 @@ The showcase lets you choose quality and size, pick an action, pause, scrub and 
 
 [Download the latest desktop installer](https://github.com/plbbl/pixel-agent-pets/releases/latest). On macOS, open the DMG and drag the app into Applications. On Windows, run the installer. No Node.js, DSH, Codex or API key is required.
 
-A transparent, draggable pet lives on your desktop. Right-click it or use the tray menu to change character, play a complete story or single action, adjust size and quality, hide or quit. Idle actions rotate and mouse interactions get a response. All media stays local; rendering uses the system WebView.
+A transparent, draggable pet lives on your desktop. Right-click it or use the tray menu to change character, play a complete story or single action, adjust size and quality, hide or quit. By default, it follows real local Codex / DSH work states. The Follow Work menu selects Auto, Codex, DSH or Off. Click to pet, hover for a response, drag and release for landing feedback, and click to wake it from rest. Idle routines use character-specific stories, with real work taking priority. All media stays local; rendering uses the system WebView.
 
 ## Codex: official nine-state compatibility
 
@@ -55,6 +55,8 @@ Codex removal moves only project-managed pet files into a recovery backup; no ap
 ## Local behavior
 
 The standalone pet and DSH use fixed foot alignment, decoded-image handoff and bounded caches. Hidden players pause and reduced motion is respected. Animation never requests a model or adds captions to prompts. Current Chinese draft detection produces only a local boolean. Codex compatibility sheets do not observe drafts or scan session files.
+
+The standalone pet reads bounded Codex status events and DSH public event facts. It does not retain transcript text, tool arguments, command output or credentials. New Chinese input produces only a local boolean. An existing DSH backend must be restarted normally after its current work finishes to load the updated plugin; refreshing the page alone does not reload server code.
 
 Claude's Chinese-language sequence is a local performance in the standalone pet, DSH and the full showcase. It does not determine nationality or ban an account.
 

@@ -38,7 +38,7 @@ export async function selectDSHProfile(profiles,{profile,interactive=false,choos
 }
 export async function verifyPrebuiltDSHPackage(repo){
  const pkg=await readJSON(path.join(repo,'package.json'));if(pkg.name!==packageName)throw Error('这不是完整的抱抱龙宠物安装包。');
- for(const file of ['dist/client.js','dist/index.js','scripts/hd-asset-route.mjs','cordis.patch.yml'])if(!await isFile(path.join(repo,file)))throw Error('安装包缺少已构建文件。请下载 Releases 中的完整安装包，不需要手动 npm install。');
+ for(const file of ['dist/client.js','dist/index.js','scripts/hd-asset-route.mjs','scripts/dsh-activity-bridge.mjs','cordis.patch.yml'])if(!await isFile(path.join(repo,file)))throw Error('安装包缺少已构建文件。请下载 Releases 中的完整安装包，不需要手动 npm install。');
  const hdRoot=path.join(repo,'assets-hd');let manifest;try{manifest=await readJSON(path.join(hdRoot,'manifest.json'));}catch{throw Error('安装包缺少高清图集。请重新下载完整安装包。');}
  if(manifest.version!==1||!manifest.characters)throw Error('高清图集版本不受支持。');
  let actions=0,images=0;

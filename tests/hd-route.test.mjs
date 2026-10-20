@@ -15,6 +15,9 @@ test('DSH local UI route serves only manifest-owned images and blocks traversal,
   const external=await fs.mkdtemp(path.join(os.tmpdir(),'pet-hd-outside-'));try{await fs.writeFile(path.join(external,'hidden.png'),png);await fs.unlink(path.join(root,'gpt/gate/160-1.png'));await fs.symlink(path.join(external,'hidden.png'),path.join(root,'gpt/gate/160-1.png'));assert.equal((await get(hdRoute+'/gpt/gate/160-1.png')).status,404);}finally{await fs.rm(external,{recursive:true,force:true});}
  }finally{await fs.rm(root,{recursive:true,force:true});}
 });
-test('host extension adds a UI-only route through the official webServer service',async()=>{
- let route,removed=false;const off=await apply({webServer:{register(value){route=value;return()=>{removed=true;};}}});assert.equal(route.kind,'prefix');assert.equal(route.path,hdRoute);assert.equal(typeof route.handler,'function');off();assert.equal(removed,true);
+test('host extension adds image and activity routes through official webServer registration',async()=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'pet-host-routes-'));try{
+  const routes=[],removed=[];const off=await apply({webServer:{register(value){routes.push(value);return()=>removed.push(value.path);}}},{directory:path.join(root,'activity')});
+  assert.equal(routes.length,2);assert.equal(routes[0].kind,'prefix');assert.equal(routes[0].path,hdRoute);assert.equal(typeof routes[0].handler,'function');assert.equal(routes[1].kind,'exact');assert.equal(routes[1].path,'/pixel-agent-pets/activity');await off();assert.deepEqual(removed,['/pixel-agent-pets/activity',hdRoute]);
+ }finally{await fs.rm(root,{recursive:true,force:true});}
 });

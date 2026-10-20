@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {installActivityBridge} from './dsh-activity-bridge.mjs';
 const assetRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../assets-hd');
 export const hdRoute='/pixel-agent-pets/assets';
 /** Only package-owned, manifest-listed images are exposed; no arbitrary file serving. */
@@ -38,7 +39,9 @@ export async function assetHandler(root=assetRoot){
  };
 }
 export const inject=['webServer'];
-export async function apply(ctx){
+export async function apply(ctx,options={}){
  const handler=await assetHandler();
- return ctx.webServer.register({kind:'prefix',path:hdRoute,handler});
+ const assets=ctx.webServer.register({kind:'prefix',path:hdRoute,handler});
+ const bridge=installActivityBridge(ctx,options);
+ return async()=>{await bridge();assets();};
 }

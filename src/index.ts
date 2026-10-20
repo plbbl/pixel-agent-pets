@@ -1,2 +1,2 @@
-/** Local UI images only. The host never registers provider, session, tool, or permission hooks. */
+/** Local UI assets and read-only public DSH activity facts. Never registers provider, tool, or permission hooks. */
 export {apply,inject} from '../scripts/hd-asset-route.mjs';
